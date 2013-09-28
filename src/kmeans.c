@@ -82,6 +82,85 @@ static int kmeans_read(FILE *input)
 }
 
 /*
+ * Writes kmeans data to a file.
+ */
+static void kmeans_write(FILE *output)
+{
+	int i;
+	int processor;
+	struct list_node *n;
+	
+	/* Map processes. */
+	processor = 0;
+	for (i = 0; i < nclusters; i++)
+	{
+		for (n = list_head(clusters[i].procs); n != NULL; list_next(n))
+		{
+			fprintf(output, "%d %d", PROCESS(n)->id, processor++);
+		}
+		
+	}
+}
+
+/*
+ * Balances number of processes between clusters.
+ */
+static void kmeans_balance(int nclusters)
+{
+	int i, j;
+	double tmp;
+	double distance;
+	struct list_node *n;
+	struct list_node *distant;
+	struct cluster *to_insert;
+	
+	/* Balance number of process between all clusters. */
+	for (i = 0; i < nclusters; i++)
+	{
+		/* Too many processes in this cluster. */
+		while (list_length(clusters[i].procs) > clusters[i].size)
+		{
+			distant = list_head(clusters[i].procs);
+			distance = vector_distance(PROCESS(distant)->traffic, clusters[i].mean);
+			
+			/* Find the more distant process within the cluster. */
+			for (n = list_next(distant); n != NULL; n = list_next(n))
+			{
+				tmp = vector_distance(PROCESS(n)->traffic, clusters[i].mean);
+				if (tmp > distance)
+				{
+					distance = tmp;
+					distant = n;
+				}
+			}
+			
+			to_insert = (i != 0) ? &clusters[0] : &clusters[1];
+			distance = vector_distance(PROCESS(distant)->traffic, to_insert->mean);
+			
+			/* Find the best cluster for the process. */
+			for (j = 0; j < nclusters; j++)
+			{
+				/* Skip fully populated clusters. */
+				if (list_length(clusters[j].procs) > clusters[j].size)
+					continue;
+				
+				tmp = vector_distance(PROCESS(distant)->traffic, clusters[j].mean);
+				
+				if (tmp < distance)
+				{
+					distance = tmp;
+					to_insert = &clusters[j];
+				}
+			}
+			
+			/* Insert process in the cluster. */
+			list_remove(clusters[j].procs, distant);
+			list_insert(clusters[j].procs, distant);
+		}
+	}
+}
+
+/*
  * Compute clusters' means.
  */
 static int kmeans_compute_means(int nclusters)
@@ -122,7 +201,7 @@ static int kmeans_compute_means(int nclusters)
 /*
  * 
  */
-void kmeans(int nclusters, int mindistance, FILE *input)
+void kmeans(int nclusters, int mindistance, FILE *input, FILE *output)
 {
 	int i, j;
 	int too_far;
@@ -151,7 +230,7 @@ void kmeans(int nclusters, int mindistance, FILE *input)
 	/* Populate clusters. */
 	for (i = 0, j = 0; i < nprocs; i++, j = (j + 1)%nclusters)
 	{
-		n = list_remove(procs);
+		n = list_remove_first(procs);
 		list_insert(clusters[j].procs, n);
 		clusters[j].size++;
 	}
@@ -180,18 +259,17 @@ void kmeans(int nclusters, int mindistance, FILE *input)
 		/* Depupulate clusters. */
 		for (i = 0; i < nclusters; i++)
 		{
-			for (j = 0; j < clusters[i].size; j++)
+			while (list_length(clusters[i].procs))
 			{
-				n = list_remove(clusters[i].procs);
+				n = list_remove_first(clusters[i].procs);
 				list_insert(procs, n);
 			}
-			clusters[i].size = 0;	
 		}
 		
 		/* Group process in clusters. */
 		for (i = 0; i < nprocs; i++)
 		{
-			n = list_remove(procs);
+			n = list_remove_first(procs);
 			
 			/* Look for minimum distance. */
 			to_insert = &clusters[0];
@@ -209,7 +287,6 @@ void kmeans(int nclusters, int mindistance, FILE *input)
 			}
 			
 			list_insert(to_insert->procs, n);
-			to_insert->size++;
 			
 			/* Found distance is greater than desired. */
 			if (distance > mindistance)
@@ -219,4 +296,20 @@ void kmeans(int nclusters, int mindistance, FILE *input)
 		has_changed = kmeans_compute_means(nclusters);
 		
 	} while (too_far && has_changed);
+	
+	
+	kmeans_balance(nclusters);
+	
+	kmeans_write(output);
+	
+	for (i = 0; i < nclusters; i++)
+	{
+		while (list_length(clusters[i].procs))
+		{
+			n = list_remove_first(clusters[i].procs);
+			vector_destroy(PROCESS(n)->traffic);
+			free(PROCESS(n));
+			list_node_destroy(n);
+		}
+	}
 }

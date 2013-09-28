@@ -11,10 +11,10 @@
  * Destroys a linked list.
  */
 void list_destroy(struct list *l)
-{
+{	
 	/* Remove all objects from the list. */
-	while (l->size > 0)
-		list_node_destroy(list_remove(l));
+	while (l->length > 0)
+		list_node_destroy(list_remove_first(l));
 	
 	free(l);
 }

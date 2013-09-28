@@ -14,7 +14,7 @@ int list_insert(struct list *l, struct list_node *node)
 	/* Insert node. */
 	node->next = l->head;
 	l->head = node;
-	l->size++;
+	l->length++;
 	
 	return (0);
 }

@@ -21,7 +21,7 @@ struct list *list_create()
 		return (NULL);
 	
 	/* Initialize the list. */
-	l->size = 0;
+	l->length = 0;
 	l->head = NULL;
 	
 	return (l);

@@ -24,4 +24,6 @@
 		struct vector *mean; /* Processes' comunication traffic mean. */
 	};
 	
+	extern void kmeans(int nclusters, int mindistance, FILE *input, FILE *output);
+	
 #endif /* KMEANS_H_ */

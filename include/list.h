@@ -21,8 +21,8 @@
 	 */
 	struct list
 	{
-		unsigned size;          /* List size. */
-		struct list_node *head; /* List head. */
+		unsigned length;        /* List length. */
+		struct list_node *head; /* List head.   */
 	};
 	
 	/*
@@ -53,7 +53,12 @@
 	/*
 	 * Removes an object from a linked list.
 	 */
-	extern struct list_node *list_remove(struct list *l);
+	extern struct list_node *list_remove(struct list *l, struct list_node *node);
+	
+	/*
+	 * Removes the first object from a linked list.
+	 */
+	extern struct list_node *list_remove_first(struct list *l);
 	
 	/*
 	 * Returns the first node of a list.
@@ -64,6 +69,11 @@
 	 * Returns the next node of a list.
 	 */
 	extern struct list_node *list_next(struct list_node *node);
+	
+	/*
+	 * Returns the length of a list.
+	 */
+	int list_length(struct list *l);
 	
 	/*
 	 * Returns the object stored in a list node.
