@@ -25,7 +25,7 @@ double vector_distance(struct vector *a, struct vector *b)
 	for (i = 0; i < a->size; i++)
 		distance +=  pow(VECTOR(a, i) - VECTOR(b, i), 2);
 	distance = sqrt(distance);
-
+	
 	return (distance);
 }
 

@@ -20,7 +20,7 @@ struct list_node *list_node_create(void *obj)
 	if (new_node == NULL)
 		return (NULL);
 	
-	new_node = obj;
+	new_node->obj = obj;
 	new_node->next = NULL;
 	
 	return (new_node);

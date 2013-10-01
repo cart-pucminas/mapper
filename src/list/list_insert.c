@@ -11,6 +11,8 @@
  */
 int list_insert(struct list *l, struct list_node *node)
 {
+	assert(node != l->head);
+	
 	/* Insert node. */
 	node->next = l->head;
 	l->head = node;

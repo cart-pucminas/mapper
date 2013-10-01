@@ -20,17 +20,31 @@ struct list_node *list_remove(struct list *l, struct list_node *node)
 	
 	walker = list_head(l);
 	
+	if (walker == node)
+	{
+		assert(l->head != l->head->next);
+		l->head = l->head->next;
+		l->length--;
+		node->next = NULL;
+		return (node);
+	}
+	
 	/* Search for node. */
 	while (walker->next != NULL)
 	{
 		/* Found. */
 		if (walker->next == node)
 		{
+			assert(walker != node->next);
 			walker->next = node->next;
 			l->length--;
 			
+			node->next = NULL;
+			
 			return (node);
 		}
+		
+		walker = walker->next;
 	}
 	
 	return (NULL);

@@ -20,9 +20,13 @@ struct list_node *list_remove_first(struct list *l)
 	
 	node = l->head;
 	
+	assert(l->head != l->head->next);
+	
 	/* Remove object from the list. */
 	l->head = l->head->next;
 	l->length--;
+	
+	node->next = NULL;
 	
 	return (node);
 }

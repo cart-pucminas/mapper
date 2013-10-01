@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <kmeans.h>
 
 /*
  *
@@ -37,14 +38,16 @@ int main(int argc, char **argv)
 	input = fopen(argv[1], "r");
 	
 	/* Failed to open input file. */
-	if (input != NULL)
+	if (input == NULL)
 		goto error0;
 
 	output = fopen(argv[2], "w");
 
 	/* Failed to open output file. */
-	if (output != NULL)
+	if (output == NULL)
 		goto error1;
+
+	kmeans(nclusters, mindistance, input, output);
 
 	fclose(output);
 	fclose(input);

@@ -5,6 +5,8 @@
 #ifndef KMEANS_H_
 #define KMEANS_H_
 	
+	#include <stdio.h>
+	
 	/*
 	 * Process.
 	 */
