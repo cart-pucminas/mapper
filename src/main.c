@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2013 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ *
+ * <main.c> - main() function of the application.
  */
 
 #include <stdio.h>
@@ -7,7 +9,7 @@
 #include <kmeans.h>
 
 /*
- *
+ * Mapps processes in a NoC
  */
 int main(int argc, char **argv)
 {

@@ -1,0 +1,58 @@
+.\"
+.\" Copyright(C) 2013 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+.\"
+.\"=============================================================================
+.\"
+.TH mapper 1 "September 2013"
+.\"
+.\"=============================================================================
+.\"
+.SH NAME
+.\"
+mapper \- A static Network on Chip (NoC) process mapper.
+.\"
+.\"=============================================================================
+.\"
+.\"
+.SH "SYNOPSIS"
+.\"
+.RI "mapper " input " " output " " "num clusters" " " "minimum distance"
+.\"
+.\"=============================================================================
+.\"
+.SH "DESCRIPTION"
+.\"
+Mapper is a static Network on Chip (NoC) process mapper that is based on the 
+.BR kmeans()
+algorithm. It reads the 
+.IR input " file"
+and split out the result in the 
+.IR output " file."
+
+
+The 
+.IR input " file"
+must have the following format:
+
+.in 10
+%origin %destin %cost
+.in
+
+Where %origin is the origin process, %destin in the destin process and %cost is
+the cost of the communication between the two process. Moreover, %origin, 
+%destin and %cost must be integers separated by a space.
+
+Likewise, the 
+.IR output " file "
+follows the following format:
+
+.in 10
+%process %processor
+.in
+
+.\"
+.\"=============================================================================
+.\"
+.SH AUTHOR
+.\"
+Pedro H. Penna <pedrohenriquepenna@gmail.com>

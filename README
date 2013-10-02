@@ -1,0 +1,36 @@
+Copyright(C) Pedro H. Penna <pedrohenriquepenna@gmail.com>
+
+                                  MAPPER
+
+WHAT IS MAPPER?
+
+Mapper is a static Network on Chip (NoC) process mapper that is based on the 
+kmeans() algorithm. You can run it by simply typing:
+
+	$: mapper <input> <output> <num clusters> <minimum distance>
+
+Notice that you should provide an input file that has the execution trace of 
+the application to be mapped. This file must have the following format:
+
+	%origin %destin %cost
+
+Where %origin is the origin process, %destin in the destin process and %cost is
+the cost of the communication between the two process. Moreover, %origin, 
+%destin and %cost must be integers separated by a space.
+
+BUILDING IT
+
+If you wish to build mapper you will first need to install GCC and GNU Make. 
+After that, you can build it by typing in the projetc's root directory:
+
+	$: make all
+
+If you wish to clean all compilation files type:
+
+	$: make clean
+
+LICENSE AND MAINTAINERS
+
+Mapper is an open source software that is under GPL V3 license and is 
+maintained by Pedro H. Penna. Any questions or suggestions send an email to
+him: <pedrohenriquepenna@gmail.com>.

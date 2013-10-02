@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2013 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ *
+ * <kmeans.h> - k-means() library.
  */
 
 #ifndef KMEANS_H_
@@ -8,24 +10,8 @@
 	#include <stdio.h>
 	
 	/*
-	 * Process.
+	 * k-means algorithm clusterization.
 	 */
-	struct process
-	{
-		int id;                 /* Process ID.            */
-		struct vector *traffic; /* Communication traffic. */
-	};
-	
-	/*
-	 * Cluster of processes.
-	 */
-	struct cluster
-	{
-		int size;            /* Number of process in the cluster.     */
-		struct list *procs;  /* Processes in the cluster.             */
-		struct vector *mean; /* Processes' comunication traffic mean. */
-	};
-	
 	extern void kmeans(int nclusters, int mindistance, FILE *input, FILE *output);
 	
 #endif /* KMEANS_H_ */
