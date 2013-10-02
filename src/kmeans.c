@@ -71,19 +71,15 @@ static int kmeans_read(FILE *input)
 		list_insert(l, node);
 	}
 	nprocs = list_length(l);
-	node = list_remove_first(l);
 	/* destroy the list. */
 	while (list_length(l))
 	{
+		node = list_remove_first(l);
 		free(OBJECT(node));
 		list_node_destroy(node);
-		node = list_remove_first(l);
 	}
 	list_destroy(l);
 
-#ifndef NDEBUG	
-	printf("matrix number of processes: %d\n", nprocs);	
-#endif	
 	
 	m = matrix_create(nprocs, nprocs);
 	assert(m != NULL);
@@ -243,29 +239,80 @@ static int kmeans_compute_means(void)
 }
 
 /*
- * 
+ * Populate clusters.
  */
-void kmeans(int _nclusters, int mindistance, FILE *input, FILE *output)
+static int kmeans_populate(int mindistance)
 {
-	int i, j;
+	int i;
 	int too_far;
-	int has_changed;
 	struct list_node *n;
-	double distance, tmp;
+	double tmp, distance;
 	struct cluster *to_insert;
 	
-#ifndef NDEBUG
-	puts("reading input file...");
-#endif
+	too_far = 0;
+	
+	/* Group process in clusters. */
+	while (list_length(procs) > 0)
+	{
+		n = list_remove_first(procs);
+		
+		/* Look for minimum distance. */
+		to_insert = &clusters[0];
+		distance = vector_distance(PROCESS(n)->traffic, to_insert->mean);
+		for (i = 1; i < nclusters; i++)
+		{
+			tmp = vector_distance(PROCESS(n)->traffic, clusters[i].mean);
+			
+			/* New minimum distance found. */
+			if (tmp < distance)
+			{
+				to_insert = &clusters[i];
+				distance = tmp;
+			}
+		}
+			
+		list_insert(to_insert->procs, n);
+		
+		/* Found distance is greater than desired. */
+		if (distance > mindistance)
+			too_far = 1;
+	}
+	
+	return (too_far);
+}
 
-	nclusters = _nclusters;
+/*
+ * Depopulate clusters.
+ */
+static void kmeans_depopulate()
+{
+	int i;
+	struct list_node *n;
+	
+	/* Depupulate clusters. */
+	for (i = 0; i < nclusters; i++)
+	{
+		while (list_length(clusters[i].procs))
+		{
+			n = list_remove_first(clusters[i].procs);
+			list_insert(procs, n);
+		}
+	}
+}
+
+/*
+ *
+ */
+static void kmeans_create(FILE *input)
+{
+	int i, j;
+	struct list_node *n;
 	
 	kmeans_read(input);
 	
 	/* Create clusters. */
 	clusters = malloc(nclusters*sizeof(struct cluster));
 	assert(clusters != NULL);
-	
 	
 	/* Initialize clusters. */
 	for (i = 0; i < nclusters; i++)
@@ -275,12 +322,7 @@ void kmeans(int _nclusters, int mindistance, FILE *input, FILE *output)
 		assert(clusters[i].procs != NULL);
 		clusters[i].mean = vector_create(nprocs);
 		assert(clusters[i].mean != NULL);
-	}	
-
-#ifndef NDEBUG	
-	puts("populating clusters...");
-	fflush(stdout);
-#endif
+	}
 
 	/* Populate clusters. */
 	for (i = 0, j = 0; i < nprocs; i++, j = (j + 1)%nclusters)
@@ -291,108 +333,20 @@ void kmeans(int _nclusters, int mindistance, FILE *input, FILE *output)
 	}
 	
 	/* Compute initial means. */
-	for (i = 0; i < nclusters; i++)
-	{
-		clusters[i].mean = vector_create(nprocs);
-		assert(clusters[i].mean != NULL);
-		
-		/* Compute cluster's mean. */
-		for (n = list_head(clusters[i].procs); n != NULL; n = list_next(n))
-		{
-			for (j = 0; j < nprocs; j++)
-				VECTOR(clusters[i].mean, j) += VECTOR(PROCESS(n)->traffic, j);
-		}
-		for (j = 0; j < nprocs; j++)
-			VECTOR(clusters[i].mean, j) /= list_length(clusters[i].procs);
-	}
-#ifndef NDEBUG
-	for (i = 0; i < nclusters; i++)
-	{
-		printf("Cluster %d population: %d\n", i, list_length(clusters[i].procs));
-	}
-#endif	
-	
-	
-	/* Apply custerization algorithm. */
-	do
-	{
-		too_far = 0;
+	kmeans_compute_means();
+}
 
-#ifndef NDEBUG		
-		puts("depopulating clusters...");
-#endif		
-		/* Depupulate clusters. */
-		for (i = 0; i < nclusters; i++)
-		{
-			while (list_length(clusters[i].procs))
-			{
-				n = list_remove_first(clusters[i].procs);
-				list_insert(procs, n);
-			}
-		
-		}
-#ifndef NDEBUG	
-		puts("populating clusters...");
-#endif		
-		/* Group process in clusters. */
-		for (i = 0; i < nprocs; i++)
-		{
-			n = list_remove_first(procs);
-			
-			/* Look for minimum distance. */
-			to_insert = &clusters[0];
-			distance = vector_distance(PROCESS(n)->traffic, to_insert->mean);
-			for (j = 1; j < nclusters; j++)
-			{
-				tmp = vector_distance(PROCESS(n)->traffic, clusters[j].mean);
-				
-				/* New minimum distance found. */
-				if (tmp < distance)
-				{
-					to_insert = &clusters[j];
-					distance = tmp;
-				}
-			}
-			
-			list_insert(to_insert->procs, n);
-			
-			/* Found distance is greater than desired. */
-			if (distance > mindistance)
-				too_far = 1;
-		}
-		
-		has_changed = kmeans_compute_means();
-		
-#ifndef NDEBUG
-		for (i = 0; i < nclusters; i++)
-			printf("Cluster %d population: %d\n", i, list_length(clusters[i].procs));
-		printf("Too far? %s\n", (too_far) ? "YES" : "NO");
-		printf("Has changed? %s\n", (has_changed) ? "YES" : "NO");
-#endif
-		
-	} while (too_far && has_changed);
-	
-	
-	kmeans_balance();
-
-#ifndef NDEBUG
-	for (i = 0; i < nclusters; i++)
-		printf("Cluster %d population: %d\n", i, list_length(clusters[i].procs));
-#endif
-	
-	
-	kmeans_write(output);
-	
-	
-#ifndef NDEBUG
-	printf("done");
-	for (i = 0; i < nclusters; i++)
-		printf("Cluster %d population: %d\n", i, list_length(clusters[i].procs));
-#endif
+/*
+ *
+ */
+static void kmeans_destroy()
+{
+	int i;
+	struct list_node *n;
 	
 	for (i = 0; i < nclusters; i++)
 	{
-		while (list_length(clusters[i].procs))
+		while (list_length(clusters[i].procs) > 0)
 		{
 			n = list_remove_first(clusters[i].procs);
 			vector_destroy(PROCESS(n)->traffic);
@@ -400,6 +354,38 @@ void kmeans(int _nclusters, int mindistance, FILE *input, FILE *output)
 			list_node_destroy(n);
 		}
 		list_destroy(clusters[i].procs);
+		vector_destroy(clusters[i].mean);
 	}
 	list_destroy(procs);
+	free(clusters);
+}
+
+/*
+ * 
+ */
+void kmeans(int _nclusters, int mindistance, FILE *input, FILE *output)
+{
+	int too_far;
+	int has_changed;
+
+	nclusters = _nclusters;
+	
+	kmeans_create(input);
+	
+	/* Apply custerization algorithm. */
+	do
+	{
+		kmeans_depopulate();
+		
+		too_far = kmeans_populate(mindistance);
+		
+		has_changed = kmeans_compute_means();
+		
+	} while (too_far && has_changed);
+	
+	kmeans_balance();
+	
+	kmeans_write(output);
+	
+	kmeans_destroy();
 }

@@ -5,9 +5,7 @@
  */
 
 #ifndef LIST_H_
-#define LIST_
-
-	#include <assert.h>
+#define LIST_H_
 
 	/*
 	 * List node.
@@ -50,7 +48,7 @@
 	/*
 	 * Inserts a list node in a linked list.
 	 */
-	int list_insert(struct list *l, struct list_node *node);
+	extern int list_insert(struct list *l, struct list_node *node);
 	
 	/*
 	 * Removes an object from a linked list.

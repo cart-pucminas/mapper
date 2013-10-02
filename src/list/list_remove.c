@@ -22,7 +22,6 @@ struct list_node *list_remove(struct list *l, struct list_node *node)
 	
 	if (walker == node)
 	{
-		assert(l->head != l->head->next);
 		l->head = l->head->next;
 		l->length--;
 		node->next = NULL;
@@ -35,7 +34,6 @@ struct list_node *list_remove(struct list *l, struct list_node *node)
 		/* Found. */
 		if (walker->next == node)
 		{
-			assert(walker != node->next);
 			walker->next = node->next;
 			l->length--;
 			
