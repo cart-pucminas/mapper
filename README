@@ -14,9 +14,9 @@ the application to be mapped. This file must have the following format:
 
 	%origin %destin %cost
 
-Where %origin is the origin process, %destin in the destin process and %cost is
-the cost of the communication between the two process. Moreover, %origin, 
-%destin and %cost must be integers separated by a space.
+Where %origin is the origin process, %destin is the destin process and %cost is
+the communication cost between the two process. Notice that, %origin, %destin 
+and %cost must be integers separated by a space.
 
 BUILDING IT
 
