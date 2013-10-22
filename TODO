@@ -1,0 +1,5 @@
+Copyright(C) 2013 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+
+TODO LIST:
+
+	- Implement generic process mapping. See kmeans_write() for details.
