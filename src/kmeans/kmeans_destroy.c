@@ -17,23 +17,23 @@ void kmeans_destroy(void)
 	int i;
 	struct list_node *n;
 	
-	/* Deallocate all data from each clusters. */
-	for (i = 0; i < nclusters; i++)
+	/* Destroy processes. */
+	while(list_length(procs) > 0)
 	{
-		/* Deallocate all processes. */
-		while (list_length(clusters[i].procs) > 0)
-		{
-			n = list_remove_first(clusters[i].procs);
-			vector_destroy(PROCESS(n)->traffic);
-			free(PROCESS(n));
-			list_node_destroy(n);
-		}
-		
+		n = list_remove_first(procs);
+		vector_destroy(PROCESS(n)->traffic);
+		free(PROCESS(n));
+		list_node_destroy(n);
+	}
+	list_destroy(procs);
+	
+	/* Destroy clusters. */
+	for (i = 0; i < nclusters; i++)
+	{		
 		list_destroy(clusters[i].procs);
 		vector_destroy(clusters[i].mean);
 	}
 	
-	list_destroy(procs);
 	free(clusters);
 }
 

@@ -27,6 +27,15 @@
 		struct list *procs;  /* Processes in the cluster.                 */
 		struct vector *mean; /* Processes' comunication traffic mean.     */
 	};
+
+	/*
+	 * NoC mesh topology.
+	 */
+	extern struct
+	{
+		int height;
+		int width;
+ 	} noc;
 	
 	/* Number of processes. */
 	extern int nprocs;

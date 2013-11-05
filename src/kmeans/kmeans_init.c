@@ -22,6 +22,8 @@ void kmeans_init(FILE *input, int _nclusters)
 	nclusters = _nclusters;
 	
 	kmeans_read(input);
+
+	assert((nprocs%nclusters) == 0);
 	
 	/* Create clusters. */
 	clusters = malloc(nclusters*sizeof(struct cluster));

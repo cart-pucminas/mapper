@@ -45,5 +45,7 @@ documentation: $(DOCDIR)/mapper.1
 
 # Clean.
 clean:
-	rm -f $(EXEC) doc/*.pdf
+	rm -f $(BINDIR)/$(EXEC_DEBUG)
+	rm -f $(BINDIR)/$(EXEC_RELEASE)
+	rm -f $(DOCDIR)/*.pdf
 	

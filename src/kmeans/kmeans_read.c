@@ -78,6 +78,9 @@ int kmeans_read(FILE *input)
 	assert(procs != NULL);
 	
 	get_procnum(input);
+	
+	assert((nprocs & 2) == 0);
+	assert((noc.height*noc.width) == nprocs);
 
 	m = matrix_create(nprocs, nprocs);
 	assert(m != NULL);

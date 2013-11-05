@@ -16,7 +16,7 @@ mapper \- A static Network on Chip (NoC) process mapper.
 .\"
 .SH "SYNOPSIS"
 .\"
-.RI "mapper " input " " output " " "num clusters" " " "minimum distance"
+.RI "mapper " "input" " " "output" " " "mesh topology" " " "num clusters" " " "minimum distance"
 .\"
 .\"=============================================================================
 .\"
@@ -29,12 +29,11 @@ algorithm. It reads the
 and split out the result in the 
 .IR output " file."
 
-
 The 
 .IR input " file"
 must have the following format:
 
-.in 10
+.in 8
 %origin %destin %cost
 .in
 
@@ -46,7 +45,7 @@ Likewise, the
 .IR output " file "
 follows the following format:
 
-.in 10
+.in 8
 %process %processor
 .in
 

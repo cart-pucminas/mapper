@@ -2,118 +2,151 @@
  * Copyright (C) 2013 Pedro H. Penna <pedrohenriquepenna@gmail.com>
  * 
  * <kmeans/kmeans_write.c> - kmeans_write() implementation.
+ *
+ * FIXME: support other topologies.
  */
 
+#include <assert.h>
 #include <list.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "kmeans.h"
 
-/* 4x8 NoC. */
-static int map32[32] = {
-	 1,  9,  2, 10,
-	17, 25, 18, 26,
+/*
+ * Table.
+ */
+struct table
+{
+	int height;
+	int width;
+	int *elements;
+};
 	
-	 3, 11,  4, 12,
-	19, 27, 20, 28,
+/*
+ * Returns the element [i, j] in a table.
+ */
+#define TABLE(t, i, j) ((t)->elements[(t)->width*(i) + (j)])
+
+/*
+ * Creates a table.
+ */
+static struct table *table_create(int height, int width)
+{
+	struct table *t;
 	
-	 5, 13,  6, 14,
-	21, 29, 22, 30,
+	t = malloc(sizeof(struct table));
 	
-	 7, 15,  8, 16,
-	23, 31, 24, 32
-};
+	/* Failed to allocate table. */
+	if (t == NULL)
+		goto error0;
 
-/* 8x8 NoC. */
-static int map64[64] = {
-	 1,  9,  2, 10,
-	17, 25, 18, 26,
-	33, 41, 34, 42,
-	49, 57, 50, 58,
+	t->height = height;
+	t->width = width;
+	
+	t->elements = calloc(height*width, sizeof(int));
+	
+	/* Failed to allocate elements. */
+	if (t->elements == NULL)
+		goto error1;
 
-	 3, 11,  4, 12,
-	19, 27, 20, 28,
-	35,	43,	36, 44,
-	51, 59,	52,	60,
+	return (t);
 
-	 5, 13,  6, 14,
-	21, 29, 22, 30,
-	37,	45,	38,	46,
-	53,	61,	54,	62,
+error1:
+	free(t);
+error0:
+	return (NULL);
+}
 
-	 7, 15,  8, 16,
-	23, 31, 24, 32,
-	39,	47,	40,	48,
-	55,	63,	56,	64
-};
+/*
+ * Destroys a table.
+ */
+static void table_destroy(struct table *t)
+{
+	free(t->elements);
+	free(t);
+}
 
-/* 8x16 NoC. */
-static int map128[128] = {
-	 1, 17,  2, 18, 33,  49, 34,  50,  3, 19,  4, 20, 35, 51, 36, 52,
-	65, 81, 66, 82, 97, 113,  8, 114, 68, 83, 68, 84, 99, 115, 100, 116,
+/*
+ * Region count.
+ */
+static int count;
 
-	5,	21,	 6,	22,	 37,  53, 28,  54, 8,	23,	8,	24,	39,	55,	40,	56,
-	69,	85,	70,	86,	101, 117, 92, 118, 72,	87,	72,	88,	103,	119,	104,	120,
+/*
+ * Internal implementation of table_split().
+ */
+static void _table_split(struct table *t, int i0, int j0, int height, int width, int size)
+{
+	int i, j;
+	
+	
+	/* Stop condition reached. */
+	if (width*height <= size)
+	{
+		/* Enumerate region. */
+		for (i = 0; i < height; i++)
+		{
+			for (j = 0; j < width; j++)
+				TABLE(t, i0 + i, j0 + j) = count;
+		}
+		
+		count++;
+		
+		return;
+	}
+	
+	/* Split vertically. */
+	if (width > height)
+	{
+		_table_split(t, i0, j0, height, width/2, size);
+		_table_split(t, i0, j0 + width/2, height, width/2, size);
+	}
+	
+	/* Split horizontally. */
+	else
+	{
+		_table_split(t, i0, j0, height/2, width, size);
+		_table_split(t, i0 + height/2, j0, height/2, width, size);
+	}
+}
 
-	9,	25,	10,	26,	41,	57,	32,	58,	12,	27,	12,	28,	43,	59,	44,	60,
-	73,	89,	74,	90,	105,	121,	96,	122, 76, 91,	76,	92,	107,	123,	108,	124,
-
-	13,	29,	14,	30,	45,	61,	36,	62,	16,	31,	16,	32,	47,	63,	48,	64,
-	77,	93,	78,	94,	109,	125,	100,	126,	80,	95,	80,	96,	111,	127,	112,	128
-};
-
-/* 16x16 NoC. */
-static int map256[256] = {
-	1,	17,	2,	18,	33,	49,	24,	50,	4,	19,	4,	20,	35,	51,	36,	52,
-	65,	81,	66,	82,	97,	113,	88,	114,	68,	83,	68,	84,	99,	115,	100,	116,
-	129,	145,	130,	146,	161,	177,	152,	178,	132,	147,	132,	148,	163,	179,	164,	180,
-	193,	209,	194,	210,	225,	241,	216,	242,	196,	211,	196,	212,	227,	243,	228,	244,
-
-	5,	21,	6,	22,	37,	53,	28,	54,	8,	23,	8,	24,	39,	55,	40,	56,
-	69,	85,	70,	86,	101,	117,	92,	118,	72,	87,	72,	88,	103,	119,	104,	120,
-	133,	149,	134,	150,	165,	181,	156,	182,	136,	151,	136,	152,	167,	183,	168,	184,
-	197,	213,	198,	214,	229,	245,	220,	246,	200,	215,	200,	216,	231,	247,	232,	248,
-
-	9,	25,	10,	26,	41,	57,	32,	58,	12,	27,	12,	28,	43,	59,	44,	60,
-	73,	89,	74,	90,	105,	121,	96,	122,	76,	91,	76,	92,	107,	123,	108,	124,
-	137,	153,	138,	154,	169,	185,	160,	186,	140,	155,	140,	156,	171,	187,	172,	188,
-	201,	217,	202,	218,	233,	249,	224,	250,	204,	219,	204,	220,	235,	251,	236,	252,
-
-	13,	29,	14,	30,	45,	61,	36,	62,	16,	31,	16,	32,	47,	63,	48,	64,
-	77,	93,	78,	94,	109,	125,	100,	126,	80,	95,	80,	96,	111,	127,	112,	128,
-	141,	157,	142,	158,	173,	189,	164,	190,	144,	159,	144,	160,	175,	191,	176,	192,
-	205,	221,	206,	222,	237,	253,	228,	254,	208,	223,	208,	224,	239,	255,	240,	256
-};
+/*
+ * Splits a table recursively.
+ */
+static void table_split(struct table *t, int i0, int j0, int height, int width, int size)
+{
+	count = 0;
+	_table_split(t, i0, j0, height, width, size);
+}
 
 /*
  * Writes kmeans() result in a file.
  */
 void kmeans_write(FILE *output)
 {
-	int i, p;
+	int c;
+	int i, j;
 	struct list_node *n;
-	int *map;
+	struct table *map;
 	
-	p = 0;
-	
-	if (nprocs == 32)
-		map = map32;
-	else if (nprocs == 64)
-		map = map64;
-	else if (nprocs == 128)
-		map = map128;
-	else if (nprocs == 256)
-		map = map256;
-	else
-	{
-		printf("Fatal error");
-		exit(1);
-	}
+	map = table_create(noc.height, noc.width);
+	assert(map != NULL);
+
+	table_split(map, 0, 0, noc.height, noc.width, nprocs/nclusters);	
 	
 	/* Map processes. */
-	for (i = 0; i < nclusters; i++)
+	for (i = 0; i < noc.height; i++)
 	{
-		for (n = list_head(clusters[i].procs); n != NULL; n = list_next(n))
-			fprintf(output, "%d %d\n", PROCESS(n)->id, map[p++]);
+		for (j = 0; j < noc.width; j++)
+		{
+			c = TABLE(map, i, j);
+			
+			n = list_remove_first(clusters[c].procs);
+			
+			fprintf(output, "%d %d\n", PROCESS(n)->id, i*noc.width + j);
+			
+			list_insert(procs, n);
+		}
 	}
+
+	table_destroy(map);
 }
