@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 	/* Wrong usage. */
 	if (argc < 6)
 	{
-		printf("Usage: %s <input> <output> <mesh topology> <num clusters> <minimum distance>\n", argv[0]);
+		printf("Usage: %s  <input> <output> <topology> <num clusters> <min distance>\n", argv[0]);
 		return (0);
 	}
 

@@ -7,7 +7,7 @@ WHAT IS MAPPER?
 Mapper is a static Network on Chip (NoC) process mapper that is based on the 
 kmeans() algorithm. You can run it by simply typing:
 
-	$: mapper <input> <output> <mesh topology> <num clusters> <minimum distance>
+	$: mapper <input> <output> <topology> <num clusters> <min distance>
 
 Example:
 
