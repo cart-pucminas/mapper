@@ -16,6 +16,7 @@
 	{
 		int id;                 /* Process ID.            */
 		struct vector *traffic; /* Communication traffic. */
+		struct cluster *old;    /* Old cluster.           */
 	};
 	
 	/*

@@ -6,6 +6,7 @@
 
 #include <math.h>
 #include <vector.h>
+#include <stdio.h>
 
 /*
  * Computes the euclidean distance between two points.

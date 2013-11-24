@@ -25,7 +25,7 @@ int kmeans_compute(void)
 	/* Compute means. */
 	for (i = 0; i < nclusters; i++)
 	{
-		mean = vector_create(nprocs);
+		mean = vector_create(nprocs*nprocs);
 		assert(mean != NULL);
 			
 		/* Compute cluster's mean. */

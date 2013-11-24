@@ -39,20 +39,27 @@ int kmeans_read(FILE *input)
         /* Read communication matrix. */
         fseek(input, 0, SEEK_SET);
         while ((fscanf(input, "%d %d %d", &src, &dest, &cost) != EOF))
-                MATRIX(m, src, dest) = cost;
+        {
+        	MATRIX(m, src, dest) = cost;
+        	MATRIX(m, dest, src) = cost;
+        }
         
         /* Create processes. */
         for (i = 0; i < nprocs; i++)
         {
-                proc = malloc(sizeof(struct process));
-                assert(proc != NULL);
+			proc = malloc(sizeof(struct process));
+			assert(proc != NULL);
                 
-                proc->traffic = vector_create(nprocs);
+                proc->traffic = vector_create(nprocs*nprocs);
                 assert(proc->traffic);
                 
                 proc->id = i;
+                
                 for (j = 0; j < nprocs; j++)
-                        VECTOR(proc->traffic, j) = MATRIX(m, i, j);
+                {
+                	VECTOR(proc->traffic, i*nprocs + j) = MATRIX(m, i, j);
+                	VECTOR(proc->traffic, j*nprocs + i) = MATRIX(m, j, i);
+                }
                 
                 node = list_node_create(proc);
                 assert(node != NULL);

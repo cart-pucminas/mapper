@@ -35,7 +35,7 @@ void kmeans_init(FILE *input, int _nclusters)
 		clusters[i].size = 0;
 		clusters[i].procs = list_create();
 		assert(clusters[i].procs != NULL);
-		clusters[i].mean = vector_create(nprocs);
+		clusters[i].mean = vector_create(nprocs*nprocs);
 		assert(clusters[i].mean != NULL);
 	}
 
@@ -43,6 +43,7 @@ void kmeans_init(FILE *input, int _nclusters)
 	for (i = 0, j = 0; i < nprocs; i++, j = (j + 1)%nclusters)
 	{
 		n = list_remove_first(procs);
+		PROCESS(n)->old = &clusters[j];
 		list_insert(clusters[j].procs, n);
 		clusters[j].size++;
 	}

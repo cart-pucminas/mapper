@@ -27,10 +27,13 @@ int kmeans_populate(int mindistance)
 		n = list_remove_first(procs);
 		
 		/* Look for closest cluster. */
-		to_insert = &clusters[0];
+		to_insert = PROCESS(n)->old;
 		distance = vector_distance(PROCESS(n)->traffic, to_insert->mean);
-		for (i = 1; i < nclusters; i++)
+		for (i = 0; i < nclusters; i++)
 		{
+			if (&clusters[i] == PROCESS(n)->old)
+				continue;
+			
 			tmp = vector_distance(PROCESS(n)->traffic, clusters[i].mean);
 			
 			/* Found. */
@@ -40,7 +43,8 @@ int kmeans_populate(int mindistance)
 				distance = tmp;
 			}
 		}
-			
+		
+		PROCESS(n)->old = to_insert;
 		list_insert(to_insert->procs, n);
 		
 		/* Cluster is too far away. */
