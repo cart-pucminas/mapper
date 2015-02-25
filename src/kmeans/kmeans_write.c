@@ -124,7 +124,7 @@ static void table_split(struct table *t, int i0, int j0, int height, int width, 
 void kmeans_write(FILE *output)
 {
 	int c;
-	int i, j;
+	unsigned i, j;
 	struct list_node *n;
 	struct table *map;
 	

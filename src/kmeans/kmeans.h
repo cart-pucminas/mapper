@@ -34,18 +34,17 @@
 	 */
 	extern struct
 	{
-		int height;
-		int width;
+		unsigned height;
+		unsigned width;
  	} noc;
 	
 	/* Number of processes. */
-	extern int nprocs;
+	extern unsigned nprocs;
 
 	/* Processes. */
 	extern struct list *procs;
 
-	/* Number of clusters. */
-	extern int nclusters;
+	extern unsigned nclusters;
 
 	/* Clusters. */
 	extern struct cluster *clusters; 

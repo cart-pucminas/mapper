@@ -12,7 +12,7 @@
  */
 void kmeans_depopulate(void)
 {
-	int i;
+	unsigned i;
 	struct list_node *n;
 	
 	/* Depupulate clusters. */

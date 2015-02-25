@@ -16,7 +16,7 @@
  */
 void kmeans_init(FILE *input, int _nclusters)
 {
-	int i, j;
+	unsigned i, j;
 	struct list_node *n;
 	
 	nclusters = _nclusters;

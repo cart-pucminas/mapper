@@ -14,7 +14,7 @@
  */
 void kmeans_balance(void)
 {
-	int i, j;
+	unsigned i, j;
 	double tmp;
 	double distance;
 	struct list_node *n;

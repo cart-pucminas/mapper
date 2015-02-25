@@ -14,7 +14,7 @@
  */
 void kmeans_destroy(void)
 {
-	int i;
+	unsigned i;
 	struct list_node *n;
 	
 	/* Destroy processes. */

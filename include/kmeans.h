@@ -9,9 +9,7 @@
 	
 	#include <stdio.h>
 	
-	/*
-	 * k-means algorithm clusterization.
-	 */
-	extern void kmeans(int nclusters, int mindistance, FILE *input, FILE *output);
+	/* Forward definitions. */
+	extern void kmeans(int, int, FILE *);
 	
 #endif /* KMEANS_H_ */

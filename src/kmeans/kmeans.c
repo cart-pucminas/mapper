@@ -9,13 +9,13 @@
 #include "kmeans.h"
 
 /* Number of processes. */
-int nprocs = 0;
+unsigned nprocs = 0;
 
 /* Processes. */
 struct list *procs = NULL;
 
 /* Number of clusters. */
-int nclusters = 0;
+unsigned nclusters = 0;
 
 /* Clusters. */
 struct cluster *clusters = NULL; 
@@ -23,9 +23,9 @@ struct cluster *clusters = NULL;
 /*
  *  k-means algorithm clusterization.
  */
-void kmeans(int _nclusters, int mindistance, FILE *input, FILE *output)
+void kmeans(unsigned _nclusters, unsigned mindistance, FILE *input)
 {
-	int i;
+	unsigned i;
 	int it;
 	int too_far;
 	int has_changed;
@@ -85,7 +85,7 @@ void kmeans(int _nclusters, int mindistance, FILE *input, FILE *output)
 		printf("\n");
 	}
 	
-	kmeans_write(output);
+	kmeans_write(stdout);
 	
 	kmeans_destroy();
 }

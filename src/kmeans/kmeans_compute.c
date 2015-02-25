@@ -15,7 +15,7 @@
  */
 int kmeans_compute(void)
 {
-	int i, j;
+	unsigned i, j;
 	int has_changed;
 	struct vector *mean;
 	struct list_node *n;

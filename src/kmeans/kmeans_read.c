@@ -18,7 +18,7 @@
 int kmeans_read(FILE *input)
 {
         int src;
-        int i, j;
+        unsigned i, j;
         int dest;
         int cost;
         struct matrix *m;

@@ -13,9 +13,61 @@
  */
 struct
 {
-	int height;
-	int width;
+	unsigned height;
+	unsigned width;
 } noc;
+
+/**
+ * @brief Number of clusters.
+ */
+unsigned nclusters;
+
+/**
+ * @brief Minimum distance.
+ */
+unsigned mindistance;
+
+/**
+ * @brief Prints an error message and exits.
+ */
+static void error(const char *msg)
+{
+	fprintf(stderr, "error: %s\n", msg);
+	exit(EXIT_FAILURE);
+}
+
+/**
+ * @brief Prints program usage and exits.
+ */
+static void usage(void)
+{
+	printf("Usage: mapper <input> <topology> <nclusters> <mindistance>\n");
+	printf("Brief: maps processes on a manycore processor");
+	exit(EXIT_SUCCESS);
+}
+
+/**
+ * @brief Reads command line arguments.
+ */
+static void readargs(int argc, char **argv)
+{
+	/* Missing arguments. */
+	if (argc < 5)
+	{
+		printf("missing arguments");
+		usage();
+	}
+
+	sscanf(argv[2], "%u %*c %u", &noc.height, &noc.width);
+	if ((noc.height == 0) || (noc.width == 0))
+		error("invalid manycore processor size");
+	
+	sscanf(argv[3], "%u", &nclusters);
+	if ((nclusters == 0))
+		error("invalid number of clusters");
+	
+	sscanf(argv[4], "%u", &mindistance);
+}
 
 /*
  * Mapps processes in a NoC
@@ -23,60 +75,17 @@ struct
 int main(int argc, char **argv)
 {
 	FILE *input;
-	FILE *output;
-	int nclusters;
-	int mindistance;
-
-	/* Wrong usage. */
-	if (argc < 6)
-	{
-		printf("Usage: %s  <input> <output> <topology> <num clusters> <min distance>\n", argv[0]);
-		return (0);
-	}
-
-	sscanf(argv[3], "%d%*c%d", &noc.height, &noc.width);
 	
-	/* Bad command line argument. */
-	if ((noc.height & 2) != 0)
-		goto error0;
-	if ((noc.width & 2) != 0)
-		goto error0;
-	if ((noc.height <= 0) || (noc.width <= 0))
-		goto error0;
+	readargs(argc, argv);
 
-	nclusters = atoi(argv[4]);
-
-	/* Bad command line argument. */
-	if (nclusters <= 0)
-		goto error0;
-	
-	mindistance = atoi(argv[5]);
-	
-	/* Bad command line argument. */
-	if (mindistance <= 0)
-		goto error0;	
-	
+	/* Open input file. */
 	input = fopen(argv[1], "r");
-	
-	/* Failed to open input file. */
 	if (input == NULL)
-		goto error0;
+		error("failed to open input file");
 
-	output = fopen(argv[2], "w");
+	kmeans(nclusters, mindistance, input);
 
-	/* Failed to open output file. */
-	if (output == NULL)
-		goto error1;
-	
-	kmeans(nclusters, mindistance, input, output);
-
-	fclose(output);
 	fclose(input);
 
 	return (0);
-
-error1:
-	fclose(input);	
-error0:
-	return (-1);
 }

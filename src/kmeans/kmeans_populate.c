@@ -13,7 +13,7 @@
  */
 int kmeans_populate(int mindistance)
 {
-	int i;
+	unsigned i;
 	int too_far;
 	struct list_node *n;
 	double tmp, distance;
