@@ -32,8 +32,8 @@ static void nas2tpz(FILE *nasfilep)
 	{
 		fprintf(stdout, "%f %u %u %u %u %u %u %u\n",
 			start,
-			source%topology.ncols, source/topology.ncols, 0,
-			dest%topology.ncols, dest/topology.ncols, 0,
+			source/topology.ncols, source%topology.ncols, 0,
+			dest/topology.ncols, dest%topology.ncols, 0,
 			size);
 		
 		fscanf(nasfilep, "%f %*u %*c %u %u %*c %u", &start,&source,&dest,&size);

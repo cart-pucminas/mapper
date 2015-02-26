@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <kmeans.h>
 
-/*
- * NoC mesh topology.
+/**
+ * @brief Mesh topology.
  */
 struct
 {

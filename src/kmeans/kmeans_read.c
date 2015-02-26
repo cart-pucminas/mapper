@@ -17,10 +17,10 @@
  */
 int kmeans_read(FILE *input)
 {
-        int src;
         unsigned i, j;
-        int dest;
-        int cost;
+        unsigned size;
+        unsigned xsrc, ysrc, src;
+        unsigned xdest, ydest, dest;
         struct matrix *m;
         struct process *proc;
         struct list_node *node;
@@ -38,10 +38,18 @@ int kmeans_read(FILE *input)
         
         /* Read communication matrix. */
         fseek(input, 0, SEEK_SET);
-        while ((fscanf(input, "%d %d %d", &src, &dest, &cost) != EOF))
+        fscanf(input, "%*f %u %u %*u %u %u %*u %u\n",
+			&xsrc, &ysrc, &xdest, &ydest, &size);
+        while (!feof(input))
         {
-        	MATRIX(m, src, dest) = cost;
-        	MATRIX(m, dest, src) = cost;
+			src = xsrc*noc.width + ysrc;
+			dest = xdest*noc.width + ydest;
+			
+        	MATRIX(m, src, dest) += size;
+        	MATRIX(m, dest, src) += size;
+        	
+			fscanf(input, "%*f %u %u %*u %u %u %*u %u\n",
+				&xsrc, &ysrc, &xdest, &ydest, &size);
         }
         
         /* Create processes. */
