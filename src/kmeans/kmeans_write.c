@@ -121,32 +121,60 @@ static void table_split(struct table *t, int i0, int j0, int height, int width, 
 /*
  * Writes kmeans() result in a file.
  */
-void kmeans_write(FILE *output)
+void kmeans_write(FILE *input)
 {
 	int c;
+	float start;
 	unsigned i, j;
+	unsigned size;
+	unsigned xsrc, ysrc, src;
+	unsigned xdest, ydest, dest;
 	struct list_node *n;
-	struct table *map;
+	struct table *maptab;
+	unsigned *map;
 	
-	map = table_create(noc.height, noc.width);
+	maptab = table_create(noc.height, noc.width);
+	assert(maptab != NULL);
+	
+	map = malloc(nprocs*sizeof(unsigned));
 	assert(map != NULL);
 
-	table_split(map, 0, 0, noc.height, noc.width, nprocs/nclusters);	
+	table_split(maptab, 0, 0, noc.height, noc.width, nprocs/nclusters);	
 	
 	/* Map processes. */
 	for (i = 0; i < noc.height; i++)
 	{
 		for (j = 0; j < noc.width; j++)
 		{
-			c = TABLE(map, i, j);
+			c = TABLE(maptab, i, j);
 			
 			n = list_remove_first(clusters[c].procs);
 			
-			fprintf(output, "%d %d\n", PROCESS(n)->id, i*noc.width + j);
+			map[PROCESS(n)->id] = i*noc.width + j;
 			
 			list_insert(procs, n);
 		}
 	}
-
-	table_destroy(map);
+	
+	/* Write trace file. */
+	fseek(input, 0, SEEK_SET);
+	fscanf(input, "%f %u %u %*u %u %u %*u %u\n",
+		&start, &xsrc, &ysrc, &xdest, &ydest, &size);
+	while (!feof(input))
+	{
+		src = xsrc*noc.width + ysrc;
+		dest = xdest*noc.width + ydest;
+			
+		fprintf(stdout, "%f %u %u %u %u %u %u %u\n",
+			start,
+			map[src]/noc.width, map[src]%noc.width, 0,
+			map[dest]/noc.width, map[dest]%noc.width, 0,
+			size);
+        
+		fscanf(input, "%f %u %u %*u %u %u %*u %u\n",
+			&start, &xsrc, &ysrc, &xdest, &ydest, &size);
+	}
+	
+	free(map);
+	table_destroy(maptab);
 }

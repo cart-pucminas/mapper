@@ -42,7 +42,7 @@ void kmeans(unsigned _nclusters, unsigned mindistance, FILE *input)
 	
 	kmeans_balance();
 
-	kmeans_write(stdout);
+	kmeans_write(input);
 	
 	kmeans_destroy();
 }

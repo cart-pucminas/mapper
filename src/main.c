@@ -54,7 +54,7 @@ static void readargs(int argc, char **argv)
 	/* Missing arguments. */
 	if (argc < 5)
 	{
-		printf("missing arguments");
+		printf("missing arguments\n");
 		usage();
 	}
 
