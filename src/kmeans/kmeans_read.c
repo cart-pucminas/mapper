@@ -38,7 +38,7 @@ int kmeans_read(FILE *input)
         
         /* Read communication matrix. */
         fseek(input, 0, SEEK_SET);
-        fscanf(input, "%*f %u %u %*u %u %u %*u %u\n",
+        fscanf(input, "%*u %u %u %*u %u %u %*u %u\n",
 			&xsrc, &ysrc, &xdest, &ydest, &size);
         while (!feof(input))
         {
@@ -48,7 +48,7 @@ int kmeans_read(FILE *input)
         	MATRIX(m, src, dest) += size;
         	MATRIX(m, dest, src) += size;
         	
-			fscanf(input, "%*f %u %u %*u %u %u %*u %u\n",
+			fscanf(input, "%*u %u %u %*u %u %u %*u %u\n",
 				&xsrc, &ysrc, &xdest, &ydest, &size);
         }
         

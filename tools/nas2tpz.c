@@ -44,13 +44,18 @@ static void nas2tpz(FILE *nasfilep)
 	unsigned size;   /* Size of the message.   */
 	unsigned dest;   /* Destination process.   */
 	unsigned source; /* Source process.        */
+	float offset;    /* Time offset.           */
 	
 	/* Convert NAS trace file. */
 	fscanf(nasfilep, "%f %*u %*c %u %u %*c %u", &start, &source, &dest, &size);
+	offset = start;
 	while (!feof(nasfilep))
 	{
-		fprintf(stdout, "%f %u %u %u %u %u %u %u\n",
-			start,
+		start -= offset;
+		start *= 1000000;
+		
+		fprintf(stdout, "%u %u %u %u %u %u %u %u\n",
+			(unsigned)start,
 			source/topology.ncols, source%topology.ncols, 0,
 			dest/topology.ncols, dest%topology.ncols, 0,
 			size);

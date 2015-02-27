@@ -124,7 +124,7 @@ static void table_split(struct table *t, int i0, int j0, int height, int width, 
 void kmeans_write(FILE *input)
 {
 	int c;
-	float start;
+	unsigned start;
 	unsigned i, j;
 	unsigned size;
 	unsigned xsrc, ysrc, src;
@@ -158,20 +158,20 @@ void kmeans_write(FILE *input)
 	
 	/* Write trace file. */
 	fseek(input, 0, SEEK_SET);
-	fscanf(input, "%f %u %u %*u %u %u %*u %u\n",
+	fscanf(input, "%u %u %u %*u %u %u %*u %u\n",
 		&start, &xsrc, &ysrc, &xdest, &ydest, &size);
 	while (!feof(input))
 	{
 		src = xsrc*noc.width + ysrc;
 		dest = xdest*noc.width + ydest;
 			
-		fprintf(stdout, "%f %u %u %u %u %u %u %u\n",
+		fprintf(stdout, "%u %u %u %u %u %u %u %u\n",
 			start,
 			map[src]/noc.width, map[src]%noc.width, 0,
 			map[dest]/noc.width, map[dest]%noc.width, 0,
 			size);
         
-		fscanf(input, "%f %u %u %*u %u %u %*u %u\n",
+		fscanf(input, "%u %u %u %*u %u %u %*u %u\n",
 			&start, &xsrc, &ysrc, &xdest, &ydest, &size);
 	}
 	
