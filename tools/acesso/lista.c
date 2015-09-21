@@ -34,7 +34,7 @@ void teste (int x, int y){
 	printf("\nZ= %d\n", z);
 }
 
-
+/*
 
 int main(void)
 {
@@ -60,6 +60,8 @@ int main(void)
 	return 0;
 	}
 }
+
+*/
 
 void inicia(node *LISTA)
 {
@@ -351,6 +353,7 @@ void insereAcesso(node *LISTA, int addr, int tid)
 }
 
 */
+
 node *retiraInicio(node *LISTA)
 {
 	if(LISTA->prox == NULL){

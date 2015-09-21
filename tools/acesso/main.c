@@ -1,9 +1,7 @@
 /*
- * hash.c
+ * main.c
  * 
  * Copyright 2015 Amanda <amanda@thor-pc>
- * Retirado e adaptado de:
- * http://www.cprogressivo.net/2013/10/Como-fazer-uma-lista-em-C.html
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,24 +21,67 @@
  * 
  */
 
+
 #include <stdio.h>
-#include <stdlib.h>
 #include "hash.h"
 
-
-void inicializaHash(Hash tab)
+int main(int argc, char **argv)
 {
-	int i;
-	for(i = 0; i < tamHash; i++)
-	{
-		tab[i] = NULL;
-		tamListas[i] = 0;
+	
+	/*
+	//Criar lista
+	node *LISTA = (node *) malloc(sizeof(node));
+	if(!LISTA){
+		printf("Sem memoria disponivel!\n");
+		exit(1);
+	}else{
+	
+	//Iniciar lista
+	inicia(LISTA);
+	
+	int opt;
+	
+	do{
+		opt=menu();
+		opcao(LISTA,opt);
+	}while(opt);
+
+	//Desalocar lista
+	free(LISTA);
+	return 0;
 	}
+	*/
+	
+	Hash tab;
+//	char nomeArq[] = "trace0.txt";
+	int addr=1;
+	int tid=0;
+//	int bytes=0;
+	int tipo=1;
+	
+	int endTab=0;
+	//inicializar tabela Hash
+	inicializaHash(tab);
+	//Abrir arquivos dos traces
+	//FILE* arquivo;
+	//arquivo = fopen(nomeArq, "r");
+	
+	//Ler arquivos
+	
+	//Ler addr
+	
+	endTab = funcaoHash(addr);
+	
+	int x = 5;
+	int y = 4;
+	 
+	 teste(x,y);
+	 
+	//insereAcesso(tab[endTab], addr, tid, tipo);
+	
+	
+	return 0;
 }
 
-int funcaoHash(int addr)
-{
-  return(addr%tamHash);
-}
-
+	
 
