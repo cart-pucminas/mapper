@@ -29,10 +29,7 @@
 
 int tam;
 
-void teste (int x, int y){
-	int z = x+y;
-	printf("\nZ= %d\n", z);
-}
+
 
 /*
 

@@ -24,4 +24,4 @@ node *retira(node *LISTA);
 
 void insereAcesso(node *LISTA, int addr, int tid, int tipo);
 
-void teste (int x, int y);
+

@@ -72,12 +72,8 @@ int main(int argc, char **argv)
 	
 	endTab = funcaoHash(addr);
 	
-	int x = 5;
-	int y = 4;
-	 
-	 teste(x,y);
-	 
-	//insereAcesso(tab[endTab], addr, tid, tipo);
+ 
+	insereAcesso(tab[endTab], addr, tid, tipo);
 	
 	
 	return 0;
