@@ -5,6 +5,7 @@
 # Default rules.
 bin/*
 *.o
+*.swp
 
 # Exceptions.
 !bin/.gitignore

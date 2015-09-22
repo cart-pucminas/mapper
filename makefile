@@ -14,19 +14,22 @@ EXEC_RELEASE = mapper
 EXEC_DEBUG = mapper_debug
 
 # Directories.
-BINDIR = bin
-INCDIR = include
-SRCDIR = src
-DOCDIR = doc
+export BINDIR = bin
+export INCDIR = include
+export SRCDIR = src
+export DOCDIR = doc
 
 # Toolchain.
-CC = gcc
+export CC = gcc
 
 # Toolchain configuration.
-CFLAGS += -ansi -pedantic
-CFLAGS += -Wall -Wextra
-CFLAGS += -O3
-CFLAGS += -I $(INCDIR) 
+export CFLAGS += -ansi -pedantic
+export CFLAGS += -Wall -Wextra
+export CFLAGS += -O3
+export CFLAGS += -I $(INCDIR) 
+
+# Phony list.
+.PHONY: tools
 
 # Builds the release and debug versions.
 all: release debug documentation
@@ -43,9 +46,14 @@ debug:
 documentation: $(DOCDIR)/mapper.1
 	man -t $< | ps2pdf - > $(DOCDIR)/mapper.pdf
 
+# Builds all toosl.
+tools:
+	cd tools/ && $(MAKE) all
+
 # Clean.
 clean:
 	rm -f $(BINDIR)/$(EXEC_DEBUG)
 	rm -f $(BINDIR)/$(EXEC_RELEASE)
 	rm -f $(DOCDIR)/*.pdf
+	cd tools && $(MAKE) clean
 	
