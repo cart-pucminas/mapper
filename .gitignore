@@ -4,6 +4,7 @@
 
 # Default rules.
 bin/*
+*.o
 
 # Exceptions.
 !bin/.gitignore
