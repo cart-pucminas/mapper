@@ -8,7 +8,8 @@ struct Node{
 }; 
 typedef struct Node node;
 
-
+node *aloca();
+node *alocaAddr(int addr, int tid);
 void inicia(node *LISTA);
 int menu(void);
 void opcao(node *LISTA, int op);

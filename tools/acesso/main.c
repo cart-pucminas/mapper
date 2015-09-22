@@ -23,11 +23,15 @@
 
 
 #include <stdio.h>
+//#include "lista.h"
 #include "hash.h"
 
 int main(int argc, char **argv)
 {
 	
+	
+	
+
 	/*
 	//Criar lista
 	node *LISTA = (node *) malloc(sizeof(node));
@@ -53,15 +57,63 @@ int main(int argc, char **argv)
 	*/
 	
 	Hash tab;
-//	char nomeArq[] = "trace0.txt";
-	int addr=1;
-	int tid=0;
-//	int bytes=0;
-	int tipo=1;
-	
-	int endTab=0;
-	//inicializar tabela Hash
+	allocHash(tab);
 	inicializaHash(tab);
+	printf("OK!\n");
+	int endTab = 0;
+	
+	int addr=1; //Qual deve ser o tipo 
+
+	int tid=0;
+
+//	int bytes=0;
+
+	int tipo=1; //r=1, w=2
+	
+	endTab = funcaoHash(addr);
+	
+	printf("\naddr= %d endTab= %d\n", addr, endTab);
+	
+	insereAcesso(tab[endTab], addr, tid, tipo);
+	insereAcesso(tab[endTab], addr, tid, tipo);
+	
+	addr = 257;
+	endTab = funcaoHash(addr);
+	
+	printf("\naddr= %d endTab= %d\n", addr, endTab);
+	
+	insereAcesso(tab[endTab], addr, tid, tipo);
+	
+	addr = 513;
+	endTab = funcaoHash(addr);
+	
+	printf("\naddr= %d endTab= %d\n", addr, endTab);
+	
+	insereAcesso(tab[endTab], addr, tid, tipo);
+	
+	printf("OK Fim !\n");
+ 
+	
+	
+//	node *LISTA = (node *) malloc(sizeof(node));
+
+
+
+//	char nomeArq[] = "trace0.txt";
+
+	//int addr=1; //Qual deve ser o tipo 
+
+	//int tid=0;
+
+//	int bytes=0;
+
+	//int tipo=1; //r=1, w=2
+	
+	
+
+//	int endTab=0;
+	//inicializar tabela Hash
+//	inicializaHash(tab);
 	//Abrir arquivos dos traces
 	//FILE* arquivo;
 	//arquivo = fopen(nomeArq, "r");
@@ -70,10 +122,10 @@ int main(int argc, char **argv)
 	
 	//Ler addr
 	
-	endTab = funcaoHash(addr);
+	//endTab = funcaoHash(addr);
 	
  
-	insereAcesso(tab[endTab], addr, tid, tipo);
+	//insereAcesso(tab[endTab], addr, tid, tipo);
 	
 	
 	return 0;

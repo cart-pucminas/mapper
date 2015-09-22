@@ -27,13 +27,20 @@
 #include <stdlib.h>
 #include "hash.h"
 
-
+void allocHash (Hash tab)
+{
+	int i;
+	for(i = 0; i < tamHash; i++){
+		tab[i] =(node *) malloc(sizeof(node));
+	}	
+	
+}
 void inicializaHash(Hash tab)
 {
 	int i;
 	for(i = 0; i < tamHash; i++)
 	{
-		tab[i] = NULL;
+		tab[i]->prox = NULL;
 		tamListas[i] = 0;
 	}
 }

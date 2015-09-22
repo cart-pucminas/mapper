@@ -9,5 +9,6 @@ int tamListas[tamHash];
 
 int tam;
 
+void allocHash (Hash tab);
 void inicializaHash(Hash tab);
 int funcaoHash(int addr);

@@ -177,8 +177,9 @@ node *alocaAddr(int addr, int tid)
 		for(count=1; count < 12; count++){
 				novo->acessos[count] = 0;
 		}
-		novo->acessos[tid] = 1;
 		novo->addr = addr;
+		novo->acessos[tid] = 1;
+		printf("\naddr= %d acessos= %d\n", addr, novo->acessos[tid]);		
 		
 		return novo;
 	}
@@ -215,7 +216,9 @@ void insereInicio(node *LISTA)
 
 void insereInicioAddr(node *LISTA, int addr, int tid, int tipo)
 {
+	printf("\nInsere início addr = %d\n", addr);
 	node *novo=alocaAddr(addr, tid);	
+	
 	node *oldHead = LISTA->prox;
 	
 	LISTA->prox = novo;
@@ -226,25 +229,33 @@ void insereInicioAddr(node *LISTA, int addr, int tid, int tipo)
 
 void insereAcesso(node *LISTA, int addr, int tid, int tipo)
 {
+	printf("\nInsere Acesso addr= %d\n", addr);
 	
 	if(LISTA->prox == NULL){ //??
 		//lista está vazia
+		printf("\nLista vazia\n");
 		insereInicioAddr(LISTA, addr, tid, tipo);
 	}
 	else{
 		node *atual = LISTA->prox;
-		int bloco = 0;
+		int bloco = 0; //Encontrou bloco ?
 		while (!bloco){
 			if (atual->addr == addr){
 				atual->acessos[tid] += 1;
+				printf("\naddr= %d acessos= %d\n", addr, atual->acessos[tid]);
 				bloco = 1; 
 			}else{
 				//Se fim da lista
 				if (atual->prox == NULL){
 					//Addr não encontrado
+					printf("\nPrimeiro acesso ao addr = %d\n", addr);
 					insereInicioAddr(LISTA, addr, tid, tipo);
 					bloco = 1;
-				}else{ atual = atual->prox; }
+				}else{ 
+						printf("\nProcurando addr = %d\n", addr);
+						atual = atual->prox; 
+					
+					}
 			}
 		}
 	}	
