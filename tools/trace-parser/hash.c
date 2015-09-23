@@ -72,9 +72,16 @@ void hash_destroy(struct hash *h)
 /**
  * @brief Inserts an object in a hash table.
  */
-void hash_insert(struct hash *h, void *obj)
+void hash_insert(struct hash *h, void *obj, unsigned (*key)(void *))
 {
 	/* TODO. */
+
+	/* Sanity check. */
+	assert(h != NULL);
+	assert(obj != NULL);
+	assert(key != NULL);
+	
+	list_insert(h->table[key(obj)], obj);
 }
 
 /**
@@ -83,6 +90,9 @@ void hash_insert(struct hash *h, void *obj)
 void *hash_get(struct hash *h, void *key, int (*cmp)(void *, void *))
 {
 	/* TODO. */
+
+
+
 }
 
 /**
