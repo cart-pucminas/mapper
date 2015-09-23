@@ -1,26 +1,21 @@
 /*
- * lista.c
+ * Copyright(C) 2015 Amanda Amorim <amandamp.amorim@gmail.com>
+ *                   Pedro H. Penna <pedrohenriquepenna@gmail.com>
  * 
- * Copyright 2015 Amanda <amanda@thor-pc>
- * Retirado e adaptado de:
- * http://www.cprogressivo.net/2013/10/Como-fazer-uma-lista-em-C.html
+ * This file is part of Mapper.
  * 
- * This program is free software; you can redistribute it and/or modify
+ * Mapper is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  * 
- * This program is distributed in the hope that it will be useful,
+ * Mapper is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- * MA 02110-1301, USA.
- * 
- * 
+ * along with Mapper. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdio.h>
@@ -60,7 +55,7 @@ int main(void)
 
 */
 
-void inicia(node *LISTA)
+void inicia(struct Node *LISTA)
 {
 	LISTA->prox = NULL;
 	tam=0;
@@ -74,8 +69,8 @@ int menu(void)
 	printf("0. Sair\n");
 	printf("1. Zerar lista\n");
 	printf("2. Exibir lista\n");
-	printf("3. Adicionar node no inicio\n");
-	printf("4. Adicionar node no final\n");
+	printf("3. Adicionar struct Node no inicio\n");
+	printf("4. Adicionar struct Node no final\n");
 	printf("5. Escolher onde inserir\n");
 	printf("6. Retirar do inicio\n");
 	printf("7. Retirar do fim\n");
@@ -85,9 +80,9 @@ int menu(void)
 	return opt;
 }
 
-void opcao(node *LISTA, int op)
+void opcao(struct Node *LISTA, int op)
 {
-	//node *tmp;
+	//struct Node *tmp;
 	switch(op){
 		//0. Sair
 		case 0:
@@ -105,12 +100,12 @@ void opcao(node *LISTA, int op)
 			exibe(LISTA);
 			break;
 
-		//3. Adicionar node no inicio
+		//3. Adicionar struct Node no inicio
 		case 3:
 			insereInicio(LISTA);
 			break;		
 
-		//4. Adicionar node no final
+		//4. Adicionar struct Node no final
 		case 4:
 			insereFim(LISTA);
 			break;
@@ -145,7 +140,7 @@ void opcao(node *LISTA, int op)
 	//free(tmp);
 }
 
-int vazia(node *LISTA)
+int vazia(struct Node *LISTA)
 {
 	if(LISTA->prox == NULL)
 		return 1;
@@ -153,9 +148,9 @@ int vazia(node *LISTA)
 		return 0;
 }
 
-node *aloca()
+struct Node *aloca()
 {
-	node *novo=(node *) malloc(sizeof(node));
+	struct Node *novo=(struct Node *) malloc(sizeof(struct Node));
 	if(!novo){
 		printf("Sem memoria disponivel!\n");
 		exit(1);
@@ -165,9 +160,9 @@ node *aloca()
 	}
 }
 
-node *alocaAddr(int addr, int tid)
+struct Node *alocaAddr(int addr, int tid)
 {
-	node *novo=(node *) malloc(sizeof(node));
+	struct Node *novo=(struct Node *) malloc(sizeof(struct Node));
 	if(!novo){
 		printf("Sem memoria disponivel!\n");
 		exit(1);
@@ -185,15 +180,15 @@ node *alocaAddr(int addr, int tid)
 	}
 }
 
-void insereFim(node *LISTA)
+void insereFim(struct Node *LISTA)
 {
-	node *novo=aloca();
+	struct Node *novo=aloca();
 	novo->prox = NULL;
 	
 	if(vazia(LISTA))
 		LISTA->prox=novo;
 	else{
-		node *tmp = LISTA->prox;
+		struct Node *tmp = LISTA->prox;
 		
 		while(tmp->prox != NULL)
 			tmp = tmp->prox;
@@ -203,10 +198,10 @@ void insereFim(node *LISTA)
 	tam++;
 }
 
-void insereInicio(node *LISTA)
+void insereInicio(struct Node *LISTA)
 {
-	node *novo=aloca();	
-	node *oldHead = LISTA->prox;
+	struct Node *novo=aloca();	
+	struct Node *oldHead = LISTA->prox;
 	
 	LISTA->prox = novo;
 	novo->prox = oldHead;
@@ -214,12 +209,12 @@ void insereInicio(node *LISTA)
 	tam++;
 }
 
-void insereInicioAddr(node *LISTA, int addr, int tid, int tipo)
+void insereInicioAddr(struct Node *LISTA, int addr, int tid, int tipo)
 {
 	printf("\nInsere início addr = %d\n", addr);
-	node *novo=alocaAddr(addr, tid);	
+	struct Node *novo=alocaAddr(addr, tid);	
 	
-	node *oldHead = LISTA->prox;
+	struct Node *oldHead = LISTA->prox;
 	
 	LISTA->prox = novo;
 	novo->prox = oldHead;
@@ -227,7 +222,7 @@ void insereInicioAddr(node *LISTA, int addr, int tid, int tipo)
 	tam++;
 }
 
-void insereAcesso(node *LISTA, int addr, int tid, int tipo)
+void insereAcesso(struct Node *LISTA, int addr, int tid, int tipo)
 {
 	printf("\nInsere Acesso addr= %d\n", addr);
 	
@@ -237,7 +232,7 @@ void insereAcesso(node *LISTA, int addr, int tid, int tipo)
 		insereInicioAddr(LISTA, addr, tid, tipo);
 	}
 	else{
-		node *atual = LISTA->prox;
+		struct Node *atual = LISTA->prox;
 		int bloco = 0; //Encontrou bloco ?
 		while (!bloco){
 			if (atual->addr == addr){
@@ -262,7 +257,7 @@ void insereAcesso(node *LISTA, int addr, int tid, int tipo)
 }
 
 
-void exibe(node *LISTA)
+void exibe(struct Node *LISTA)
 {
 	system("clear");
 	if(vazia(LISTA)){
@@ -270,7 +265,7 @@ void exibe(node *LISTA)
 		return ;
 	}
 	
-	node *tmp;
+	struct Node *tmp;
 	tmp = LISTA->prox;
 	printf("Lista:");
 	while( tmp != NULL){
@@ -290,10 +285,10 @@ void exibe(node *LISTA)
 }
 
 //Esvaziar lista
-void libera(node *LISTA)
+void libera(struct Node *LISTA)
 {
 	if(!vazia(LISTA)){
-		node *proxNode,
+		struct Node *proxNode,
 			  *atual;
 		
 		atual = LISTA->prox;
@@ -305,7 +300,7 @@ void libera(node *LISTA)
 	}
 }
 
-void insere(node *LISTA)
+void insere(struct Node *LISTA)
 {
 	int pos,
 		count;
@@ -316,9 +311,9 @@ void insere(node *LISTA)
 		if(pos==1)
 			insereInicio(LISTA);
 		else{
-			node *atual = LISTA->prox,
+			struct Node *atual = LISTA->prox,
 				 *anterior=LISTA; 
-			node *novo=aloca();
+			struct Node *novo=aloca();
 				 
 			for(count=1 ; count < pos ; count++){
 					anterior=atual;
@@ -334,7 +329,7 @@ void insere(node *LISTA)
 }
 
 /*
-void insereAcesso(node *LISTA, int addr, int tid)
+void insereAcesso(struct Node *LISTA, int addr, int tid)
 {
 	
 	if(LISTA->prox == NULL){
@@ -342,7 +337,7 @@ void insereAcesso(node *LISTA, int addr, int tid)
 		insereInicioAddr(LISTA, addr, tid);
 	}
 	else{
-		node *atual = LISTA->prox;
+		struct Node *atual = LISTA->prox;
 		int bloco = 0;
 		while (!bloco){
 			if (atual->addr == addr){
@@ -362,13 +357,13 @@ void insereAcesso(node *LISTA, int addr, int tid)
 
 */
 
-node *retiraInicio(node *LISTA)
+struct Node *retiraInicio(struct Node *LISTA)
 {
 	if(LISTA->prox == NULL){
 		printf("Lista ja esta vazia\n");
 		return NULL;
 	}else{
-		node *tmp = LISTA->prox;
+		struct Node *tmp = LISTA->prox;
 		LISTA->prox = tmp->prox;
 		tam--;
 		return tmp;
@@ -376,13 +371,13 @@ node *retiraInicio(node *LISTA)
 				
 }
 
-node *retiraFim(node *LISTA)
+struct Node *retiraFim(struct Node *LISTA)
 {
 	if(LISTA->prox == NULL){
 		printf("Lista ja vazia\n\n");
 		return NULL;
 	}else{
-		node *ultimo = LISTA->prox,
+		struct Node *ultimo = LISTA->prox,
 			 *penultimo = LISTA;
 			 
 		while(ultimo->prox != NULL){
@@ -396,7 +391,7 @@ node *retiraFim(node *LISTA)
 	}
 }
 
-node *retira(node *LISTA)
+struct Node *retira(struct Node *LISTA)
 {
 	int opt,
 		count;
@@ -407,7 +402,7 @@ node *retira(node *LISTA)
 		if(opt==1)
 			return retiraInicio(LISTA);
 		else{
-			node *atual = LISTA->prox,
+			struct Node *atual = LISTA->prox,
 				 *anterior=LISTA; 
 				 
 			for(count=1 ; count < opt ; count++){

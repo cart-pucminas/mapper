@@ -14,17 +14,17 @@ EXEC_RELEASE = mapper
 EXEC_DEBUG = mapper_debug
 
 # Directories.
-export BINDIR = bin
-export INCDIR = include
-export SRCDIR = src
-export DOCDIR = doc
+export BINDIR = $(CURDIR)/bin
+export INCDIR = $(CURDIR)/include
+export SRCDIR = $(CURDIR)/src
+export DOCDIR = $(CURDIR)/doc
 
 # Toolchain.
 export CC = gcc
 
 # Toolchain configuration.
-export CFLAGS += -ansi -pedantic
-export CFLAGS += -Wall -Wextra
+# export CFLAGS += -ansi -pedantic
+# export CFLAGS += -Wall -Wextra
 export CFLAGS += -O3
 export CFLAGS += -I $(INCDIR) 
 
@@ -32,7 +32,7 @@ export CFLAGS += -I $(INCDIR)
 .PHONY: tools
 
 # Builds the release and debug versions.
-all: release debug documentation
+all: tools release debug documentation
 
 # Builds the release version.
 release: $(SRC)
