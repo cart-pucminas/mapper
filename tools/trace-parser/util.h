@@ -1,6 +1,6 @@
 /*
- * Copyright(C) 2015 Amanda Amorim <amandamp.amorim@gmail.com>
- *                   Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ * Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ *                            Amanda Amorim <amandamp.amorim@gmail.com>
  * 
  * This file is part of Mapper.
  * 
@@ -18,28 +18,14 @@
  * along with Mapper. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#ifndef UTIL_H_
+#define UTIL_H_
 
-/**
- * @brief List node.
- */
-struct access
-{
-	int addr;
-	int acessos [12];
-	int flag;
-	int idade;
-};
+	#include <stdlib.h>
 
-/**
- * @brief Creates an memory access.
- */
+	/* Forward definitions. */
+	extern void error(const char *);
+	extern void *smalloc(size_t);
+	extern void *scalloc(size_t, size_t);
 
-int main(int argc, char **argv)
-{
-
-	return (EXIT_SUCCESS);
-}
-
-	
-
+#endif /* UTIL_H_ */

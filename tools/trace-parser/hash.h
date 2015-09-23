@@ -21,18 +21,15 @@
 #ifndef HASH_H_
 #define HASH_H_
 
-	#include "lista.h"
-
-	#define tamHash 256
-
-	typedef struct Node* Hash[tamHash];
-
-	int tamListas[tamHash];
-
-	int tam;
-
-	void allocHash (Hash tab);
-	void inicializaHash(Hash tab);
-	int funcaoHash(int addr);
+	#include "list.h"
+	
+	/**
+	 * @brief Opaque pointer to a hash table.
+	 */
+	typedef struct hash * hash;
+	
+	/* Forward definitions. */
+	hash hash_create(unsigned);
+	void hash_destroy(hash);
 
 #endif /* HASH_H_ */

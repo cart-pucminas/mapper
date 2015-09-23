@@ -18,31 +18,53 @@
  * along with Mapper. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+
+#include "util.h"
+#include "list.h"
 #include "hash.h"
-
-void allocHash (Hash tab)
-{
-	int i;
-	for(i = 0; i < tamHash; i++){
-		tab[i] =(struct Node *) malloc(sizeof(struct Node));
-	}	
 	
-}
-void inicializaHash(Hash tab)
+/**
+ * @brief Hash table.
+ */
+struct hash
 {
-	int i;
-	for(i = 0; i < tamHash; i++)
-	{
-		tab[i]->prox = NULL;
-		tamListas[i] = 0;
-	}
-}
+	unsigned size; /**< Table size. */
+	list *table;   /**< Table.      */
+};
 
-int funcaoHash(int addr)
+/**
+ * @brief Creates a hash table.
+ */
+struct hash *hash_create(unsigned size)
 {
-  return(addr%tamHash);
+	struct hash *h;
+	
+	/* Sanity check. */
+	assert(size > 0);
+	
+	h = smalloc(sizeof(struct hash));
+	
+	/* Initialize hash. */
+	h->size = size;
+	h->table = scalloc(size, sizeof(list));
+	for (unsigned i = 0; i < size; i++)
+		h->table[i] = list_create();
+	
+	return (h);
 }
 
-
+/**
+ * @brief Destroys a hash table.
+ */
+void hash_destroy(struct hash *h)
+{
+	/* Sanity check. */
+	assert(h != NULL);
+	
+	for (unsigned i = 0; i < h->size; i++)
+		list_destroy(h->table[i]);
+	free(h->table);
+	free(h);
+}

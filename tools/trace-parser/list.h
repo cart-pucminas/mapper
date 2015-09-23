@@ -22,34 +22,33 @@
 #define LIST_H_
 
 	/**
-	 * @brief List node.
+	 * @brief Linked list node.
 	 */
-	struct Node
+	struct list_node
 	{
-		int addr;
-		int acessos [12];
-		int flag;
-		int idade;
-		struct Node *prox;
+		void *obj;              /**< Object.                */
+		struct list_node *next; /**< Next node in the list. */
 	};
 
-	/* Forward definitions. */
-	struct Node *aloca();
-	struct Node *alocaAddr(int addr, int tid);
-	void inicia(struct Node *LISTA);
-	int menu(void);
-	void opcao(struct Node *LISTA, int op);
-	struct Node *criaNo();
-	void insereFim(struct Node *LISTA);
-	void insereInicio(struct Node *LISTA);
-	void exibe(struct Node *LISTA);
-	void libera(struct Node *LISTA);
-	void insere (struct Node *LISTA);
-	struct Node *retiraInicio(struct Node *LISTA);
-	struct Node *retiraFim(struct Node *LISTA);
-	struct Node *retira(struct Node *LISTA);
+	/**
+	 * @brief Linked list.
+	 */
+	struct list
+	{
+		unsigned length;       /**< List length. */
+		struct list_node head; /**< List head. */
+	};
+	
+	/**
+	 * @brief Opaque pointer to a linked list.
+	 */
+	typedef struct list *list;
 
-	void insereAcesso(struct Node *LISTA, int addr, int tid, int tipo);
+	/* Forward definitions. */
+	list list_create(void);
+	void list_destroy(list);
+	void list_insert(list, void *);
+	void *list_remove(list, void *, int (void *, void *));
 
 #endif /* LIST_H_ */
 

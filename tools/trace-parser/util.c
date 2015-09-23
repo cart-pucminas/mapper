@@ -1,6 +1,6 @@
 /*
- * Copyright(C) 2015 Amanda Amorim <amandamp.amorim@gmail.com>
- *                   Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ * Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ *                            Amanda Amorim <amandamp.amorim@gmail.com>
  * 
  * This file is part of Mapper.
  * 
@@ -18,28 +18,40 @@
  * along with Mapper. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 
 /**
- * @brief List node.
+ * @brief Prints an error message and exits.
  */
-struct access
+void error(const char *msg)
 {
-	int addr;
-	int acessos [12];
-	int flag;
-	int idade;
-};
-
-/**
- * @brief Creates an memory access.
- */
-
-int main(int argc, char **argv)
-{
-
-	return (EXIT_SUCCESS);
+	fprintf(stderr, "error: %s\n", msg);
+	exit(EXIT_FAILURE);
 }
 
+/**
+ * @brief Safe malloc().
+ */
+void *smalloc(size_t size)
+{
+	void *p;
 	
+	if ((p = malloc(size)) == NULL)
+		error("cannot malloc()");
+	
+	return (p);
+}
 
+/**
+ * @brief Safe calloc().
+ */
+void *scalloc(size_t nmemb, size_t size)
+{
+	void *p;
+	
+	if ((p = calloc(nmemb, size)) == NULL)
+		error("cannot malloc()");
+	
+	return (p);
+}
