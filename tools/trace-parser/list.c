@@ -97,6 +97,37 @@ void list_insert(struct list *l, void *obj)
 }
 
 /**
+ * @brief Retrieves an object from a list.
+ */
+void *list_get(struct list *l, void *key, int (*cmp)(void *, void *))
+{
+	void *obj;           /* Object to get. */
+	struct list_node *w; /* Walker.           */
+	
+	/* Sanity check. */
+	assert(l != NULL);
+	assert(key != NULL);
+	assert(cmp != NULL);
+	
+	/* Search for object. */
+	for (w = &l->head; w->next != NULL; w = w->next)
+	{
+		/* Found. */
+		if (cmp(key, w->next->obj))
+			goto found;
+	}
+	
+	return (NULL);
+	
+found:
+
+	obj = w->next->obj;	
+	
+
+	return (obj);
+}
+
+/**
  * @brief Removes an object from a linked list.
  */
 void *list_remove(struct list *l, void *key, int (*cmp)(void *, void *))
