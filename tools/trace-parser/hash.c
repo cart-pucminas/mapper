@@ -97,7 +97,7 @@ void *hash_get(struct hash *h, void *obj, unsigned (*key)(void *), int (*cmp)(vo
 	assert(key != NULL);
 	assert(cmp != NULL);
 	
-	objRem = list_get(h->table[key(obj)], obj, cmp);
+	objGet = list_get(h->table[key(obj)], obj, cmp);
 	
 	return(objGet);
 
