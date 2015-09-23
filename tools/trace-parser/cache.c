@@ -22,25 +22,18 @@
 #include <stdio.h>
 
 #include "util.h"
+#include "list.h"
 #include "hash.h"
-
-/**
- * @brief Memory access.
- */
-struct access
-{
-	uint64_t addr;  /** Address.            */
-	int access[12]; /**< Access per thread. */
-};
 
 /**
  * @brief Cache block.
  */
 struct block
 {
-	struct access *a; /**< Underlying memory access. */
-	unsigned flags;   /**< Flags.                    */
-	unsigned age;     /**< Age for evicting.         */
+	void *obj;      /**< Underlying memory access. */
+	long offset;    /**< Offset.                   */
+	unsigned flags; /**< Flags.                    */
+	unsigned age;   /**< Age for evicting.         */
 };
 
 /**
@@ -48,72 +41,40 @@ struct block
  */
 struct
 {
-	FILE *swp;   /**< Swap file.           */
-	hash *table; /**< Memory access table. */
-	list free;   /**< List of free blocks. */
+	FILE *swp;            /**< Swap file.            */
+	hash *table;          /**< Cache table.          */
+	struct block *blocks; /**< Cache blocks.         */
+	list free;            /**< List of free blocks.  */
 } cache;
 
 /**
- * @brief Creates a memory access.
+ * @brief Evicts an object from the cache.
  */
-static struct access *access_create(void)
+static void cache_evict(void)
 {
-	struct access *a;
-	
-	a = smalloc(sizeof(struct access));
-	
-	return (a);
+	/* TODO. */
 }
 
 /**
- * @brief Destroys a memory access.
+ * @brief Inserts an object in the cache.
  */
-static void access_destroy(struct access *a)
+void cache_insert(void *obj, unsigned addr)
 {
-	free(a);
+	/* TODO. */
 }
 
 /**
- * @brief Reads a memory access from the swap file.
+ * @brief Updades an object in the cache.
  */
-static struct access *access_read(uint64_t addr, off_t *off)
+void cache_update(void *obj, unsigned addr)
 {
-	struct access *a;
-	struct access *tmp;
-	
-	a = access_create();
-	
-	fseek(cache.swp, 0, SEEK_SET);
-	
-	/* Search memory acess in the swap file. */
-	do
-	{
-		if (fread(&tmp, sizeof(struct access), 1, cache.swp) != 1)
-		{
-			if (ferror(cache.swp))
-				error("failed to read swap file");
-		}
-		
-		/* Found. */
-		if (tmp.addr == addr)
-			goto found;
-	} while (!feof(cache.swp));
-
-	return (NULL);
-	
-found:
-
-	memcpy(a, &tmp, sizeof(struct access));
-	if (off != NULL)
-		*off = ftell(cache.swp);
-	
-	return (a);
+	/* TODO. */
 }
 
 /**
- * @brief Writes a memory access to the swap file.
+ * @brief Flushes the cache to the swap file.
  */
-static void access_write(struct access *a)
+void cache_flush(void)
 {
 	/* TODO. */
 }
@@ -121,7 +82,7 @@ static void access_write(struct access *a)
 /**
  * @brief Initializes the cache.
  */
-void cache_init(void)
+void cache_init(FILE *file, size_t obj_size, unsigned cache_size)
 {
 	/* TODO. */
 }
