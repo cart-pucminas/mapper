@@ -23,7 +23,7 @@ export DOCDIR = $(CURDIR)/doc
 export CC = gcc
 
 # Toolchain configuration.
-# export CFLAGS += -ansi -pedantic
+export CFLAGS += -std=c99
 # export CFLAGS += -Wall -Wextra
 export CFLAGS += -O3
 export CFLAGS += -I $(INCDIR) 

@@ -22,6 +22,7 @@
 #define ACCESS_H_
 
 	#include <stdio.h>
+	#include <stdint.h>
 
 	/**
 	 * @brief Memory access.

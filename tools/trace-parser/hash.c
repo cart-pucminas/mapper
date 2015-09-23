@@ -74,7 +74,6 @@ void hash_destroy(struct hash *h)
  */
 void hash_insert(struct hash *h, void *obj, unsigned (*key)(void *))
 {
-	/* TODO. */
 	/* Sanity check. */
 	assert(h != NULL);
 	assert(obj != NULL);
@@ -88,40 +87,26 @@ void hash_insert(struct hash *h, void *obj, unsigned (*key)(void *))
  */
 void *hash_get(struct hash *h, void *obj, unsigned (*key)(void *), int (*cmp)(void *, void *))
 {
-	/* TODO. */
-	void *objGet; /* Object to get. */
-
 	/* Sanity check. */
 	assert(h != NULL);
 	assert(obj != NULL);
 	assert(key != NULL);
 	assert(cmp != NULL);
 	
-	objGet = list_get(h->table[key(obj)], obj, cmp);
-	
-	return(objGet);
-
-
- return
+	return(list_get(h->table[key(obj)], obj, cmp));
 }
 
 /**
  * @brief Removes an object from the hash table.
  */
 void *hash_remove(struct hash *h, void *obj, unsigned (*key)(void *), int (*cmp)(void *, void *))
-{
-	/* TODO. */
-	
-	void *objRem; /* Object to remove. */
-	
+{	
 	/* Sanity check. */
 	assert(h != NULL);
 	assert(obj != NULL);
 	assert(key != NULL);
 	assert(cmp != NULL);
 	
-	objRem = list_remove(h->table[key(obj)], obj, cmp);
-	
-	return(objRem);
+	return(list_remove(h->table[key(obj)], obj, cmp));
 	
 }

@@ -18,8 +18,9 @@
  * along with Mapper. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
+#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "util.h"
 #include "list.h"
@@ -42,7 +43,8 @@ struct block
 struct
 {
 	FILE *swp;            /**< Swap file.            */
-	hash *table;          /**< Cache table.          */
+	hash table;           /**< Cache table.          */
+	unsigned size;        /**< Cache size.           */
 	struct block *blocks; /**< Cache blocks.         */
 	list free;            /**< List of free blocks.  */
 } cache;
@@ -84,5 +86,19 @@ void cache_flush(void)
  */
 void cache_init(FILE *file, size_t obj_size, unsigned cache_size)
 {
-	/* TODO. */
+	/* Sanity check. */
+	assert(file != NULL);
+	assert(obj_size > 0);
+	assert(cache_size > 0);
+	
+	/* Initialize cache. */
+	cache.swp = file;
+	cache.table = hash_create(cache_size >> 2);
+	cache.size = cache_size;
+	cache.blocks = scalloc(cache_size, sizeof(struct block));
+	cache.free = list_create();
+	
+	/* Initialize list of free blocks. */
+	for (unsigned i = 0; i < cache_size; i++)
+		list_insert(cache.free, &cache.blocks[i]);
 }
