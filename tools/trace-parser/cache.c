@@ -19,6 +19,7 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "util.h"
 #include "hash.h"
@@ -45,18 +46,23 @@ struct block
 /**
  * @brief Cache.
  */
-struct cache
+struct
 {
+	FILE *swp;   /**< Swap file.           */
 	hash *table; /**< Memory access table. */
 	list free;   /**< List of free blocks. */
-}
+} cache;
 
 /**
  * @brief Creates a memory access.
  */
 static struct access *access_create(void)
 {
-	/* TODO. */
+	struct access *a;
+	
+	a = smalloc(sizeof(struct access));
+	
+	return (a);
 }
 
 /**
@@ -64,15 +70,44 @@ static struct access *access_create(void)
  */
 static void access_destroy(struct access *a)
 {
-	/* TODO. */
+	free(a);
 }
 
 /**
  * @brief Reads a memory access from the swap file.
  */
-static struct access *access_read(uint64_t addr)
+static struct access *access_read(uint64_t addr, off_t *off)
 {
-	/* TODO. */	
+	struct access *a;
+	struct access *tmp;
+	
+	a = access_create();
+	
+	fseek(cache.swp, 0, SEEK_SET);
+	
+	/* Search memory acess in the swap file. */
+	do
+	{
+		if (fread(&tmp, sizeof(struct access), 1, cache.swp) != 1)
+		{
+			if (ferror(cache.swp))
+				error("failed to read swap file");
+		}
+		
+		/* Found. */
+		if (tmp.addr == addr)
+			goto found;
+	} while (!feof(cache.swp));
+
+	return (NULL);
+	
+found:
+
+	memcpy(a, &tmp, sizeof(struct access));
+	if (off != NULL)
+		*off = ftell(cache.swp);
+	
+	return (a);
 }
 
 /**
