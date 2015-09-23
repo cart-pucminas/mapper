@@ -68,3 +68,27 @@ void hash_destroy(struct hash *h)
 	free(h->table);
 	free(h);
 }
+
+/**
+ * @brief Inserts an object in a hash table.
+ */
+void hash_insert(struct hash *h, void *obj)
+{
+	/* TODO. */
+}
+
+/**
+ * @brief Retrieves an object from a hash table.
+ */
+void *hash_get(struct hash *h, void *key, int (*cmp)(void *, void *))
+{
+	/* TODO. */
+}
+
+/**
+ * @brief Removes an object from the hash table.
+ */
+void *hash_remove(struct hash *h, void *key, int (*cmp)(void *, void *))
+{
+	/* TODO. */
+}

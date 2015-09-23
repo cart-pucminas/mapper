@@ -20,20 +20,6 @@
 
 #include <stdlib.h>
 
-/**
- * @brief List node.
- */
-struct access
-{
-	int addr;
-	int acessos [12];
-	int flag;
-	int idade;
-};
-
-/**
- * @brief Creates an memory access.
- */
 
 int main(int argc, char **argv)
 {
