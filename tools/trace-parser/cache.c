@@ -44,7 +44,8 @@ struct
 {
 	FILE *swp;            /**< Swap file.            */
 	hash table;           /**< Cache table.          */
-	unsigned size;        /**< Cache size.           */
+	unsigned cache_size;  /**< Cache size.           */
+	size_t obj_size;      /**< Object size.          */
 	struct block *blocks; /**< Cache blocks.         */
 	list free;            /**< List of free blocks.  */
 } cache;
@@ -94,7 +95,8 @@ void cache_init(FILE *file, size_t obj_size, unsigned cache_size)
 	/* Initialize cache. */
 	cache.swp = file;
 	cache.table = hash_create(cache_size >> 2);
-	cache.size = cache_size;
+	cache.cache_size = cache_size;
+	cache.obj_size = obj_size;
 	cache.blocks = scalloc(cache_size, sizeof(struct block));
 	cache.free = list_create();
 	
