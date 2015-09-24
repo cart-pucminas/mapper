@@ -56,6 +56,41 @@ struct
 static void cache_evict(void)
 {
 	/* TODO. */
+	// pega o mais antigo e coloca no swap e coloca o bloco na lista de livres
+	
+	unsigned old = -1; 
+	unsigned old_blocks;
+	
+	struct block *block_tmp;
+	
+	for (unsigned i = 0; i < cache_size; i++){
+		
+		//Testar se o block é valido
+		if(cache.blocks[i]->flags = 1){
+			
+			if(old == -1){
+				//Primeiro block válido encontrado
+				old = cache.blocks[i]->age;
+				old_blocks = i;
+			
+			}else if(cache.blocks[i]->age < old){
+				old = cache.blocks[i]->age;
+				old_blocks = i; 
+			}
+	}
+		
+		//Remover da hash
+		//Qual é a chave da hash? e a chave do objeto para comparação?
+		// block_tmp = hash_remove(&table, cache.blocks[old_blocks], unsigned (*key)(void *), int (*cmp)(void *, void *))
+
+		
+		//Gravar no swap
+		//Não sei manipular arquivo
+		
+		
+		//inserir o bloco da lista de livres
+		list_insert(cache.free, &cache.blocks[old_blocks]);
+	
 }
 
 /**
