@@ -26,12 +26,19 @@
 #include "list.h"
 #include "hash.h"
 
+#define INVALIDO_LIMPO 0;
+#define INVALIDO_SUJO 1; 
+#define VALIDO_LIMPO 2;
+#define VALIDO_SUJO 3;
+
+
 /**
  * @brief Cache block.
  */
 struct block
 {
 	void *obj;      /**< Underlying memory access. */
+	unsigned addr;	/**< Addr.                   *
 	long offset;    /**< Offset.                   */
 	unsigned flags; /**< Flags.                    */
 	unsigned age;   /**< Age for evicting.         */
@@ -50,6 +57,7 @@ struct
 	list free;            /**< List of free blocks.  */
 } cache;
 
+
 /**
  * @brief Evicts an object from the cache.
  */
@@ -58,35 +66,72 @@ static void cache_evict(void)
 	/* TODO. */
 	// pega o mais antigo e coloca no swap e coloca o bloco na lista de livres
 	
-	unsigned old = -1; 
+	int encontrar_block = 0; 
+	unsigned i = 0;
+	unsigned old; 
 	unsigned old_blocks;
 	
-	struct block *block_tmp;
+	struct block *block_write;
+	struct block *block_read;
 	
-	for (unsigned i = 0; i < cache_size; i++){
+	unsigned cont = 0;
+	
+	//Encontrar o primeiro bloco válido 
+	while (!encontrar_block && i < cache_size){
 		
-		//Testar se o block é valido
-		if(cache.blocks[i]->flags = 1){
-			
-			if(old == -1){
-				//Primeiro block válido encontrado
-				old = cache.blocks[i]->age;
-				old_blocks = i;
-			
-			}else if(cache.blocks[i]->age < old){
-				old = cache.blocks[i]->age;
-				old_blocks = i; 
-			}
+		//Testar se o block é valido 
+		if(cache.blocks[i]->flags = VALIDO_LIMPO || cache.blocks[i]->flags = VALIDO_SUJO ){
+			//Primeiro block válido encontrado
+			old = cache.blocks[i]->age;
+			old_blocks = i;
+			encontrar_block = 1;
+		}
+		i++;
+	}
+	
+	//Emcontrar o bloco mais velho
+	for (unsigned j = i; j < cache_size; j++){
+		
+		//Testar se o block é valido e se é mais velho que o atual
+		if((cache.blocks[j]->flags = 2 || cache.blocks[j]->flags = 3 )
+			&& cache.blocks[j]->age < old){
+				old = cache.blocks[j]->age;
+				old_blocks = j; 
+		}
 	}
 		
 		//Remover da hash
-		//Qual é a chave da hash? e a chave do objeto para comparação?
-		// block_tmp = hash_remove(&table, cache.blocks[old_blocks], unsigned (*key)(void *), int (*cmp)(void *, void *))
+		/* A função não deveria receber as funções key (chave da hash) e
+		 * cmp(usado para procurar o bloco nas listas da hash) para serem passadas
+		 * para a função hash_remove ao invés de ter addr no block
+		 */
+		
+		// block_write = hash_remove(&table, cache.blocks[old_blocks], unsigned (*key)(void *), int (*cmp)(void *, void *))
 
 		
 		//Gravar no swap
-		//Não sei manipular arquivo
 		
+		//Procurar o block no swap
+		fseek(cache.swp, 0, SEEK_SET); // Posicionar o ponteiro no ínicio do arquivo 
+		encontrar_block = 0;
+		
+		while(!encontrar_block || cache.swp != EOF){ 
+			
+			cont++;
+			fread(block_read, cache.obj_size, 1, cache.swp);
+		
+			if(cmp (block_read, block_write)){
+					encontrar_block = 1;
+					cont--;
+			}		
+		} 
+		
+		//Posicionar o arquivo na posição de escrita do block
+		
+		cont = cont * cache.obj_size;
+		fseek(cache.swp, cont , SEEK_SET);
+		
+		fwrite( block_write, cache.obj_size, 1 , cache.swp);
 		
 		//inserir o bloco da lista de livres
 		list_insert(cache.free, &cache.blocks[old_blocks]);
