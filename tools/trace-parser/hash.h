@@ -29,7 +29,10 @@
 	typedef struct hash * hash;
 	
 	/* Forward definitions. */
-	hash hash_create(unsigned);
-	void hash_destroy(hash);
+	extern hash hash_create(unsigned);
+	extern void hash_destroy(hash);
+	extern void hash_insert(struct hash *, void *, unsigned);
+	extern void *hash_get(struct hash *, unsigned, unsigned (*)(void *));
+	extern void *hash_remove(struct hash *, unsigned, unsigned (*)(void *));
 
 #endif /* HASH_H_ */

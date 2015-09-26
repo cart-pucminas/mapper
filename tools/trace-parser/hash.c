@@ -35,6 +35,11 @@ struct hash
 };
 
 /**
+ * @brief Hash function.
+ */
+#define HASH(h, k) ((k) % (h)->size)
+
+/**
  * @brief Creates a hash table.
  */
 struct hash *hash_create(unsigned size)
@@ -72,41 +77,36 @@ void hash_destroy(struct hash *h)
 /**
  * @brief Inserts an object in a hash table.
  */
-void hash_insert(struct hash *h, void *obj, unsigned (*key)(void *))
+void hash_insert(struct hash *h, void *obj, unsigned key)
 {
 	/* Sanity check. */
 	assert(h != NULL);
 	assert(obj != NULL);
-	assert(key != NULL);
 	
-	list_insert(h->table[key(obj)], obj);
+	list_insert(h->table[HASH(h, key)], obj);
 }
 
 /**
  * @brief Retrieves an object from a hash table.
  */
-void *hash_get(struct hash *h, void *obj, unsigned (*key)(void *), int (*cmp)(void *, void *))
+void *hash_get(struct hash *h, unsigned key, unsigned (*getkey)(void *))
 {
 	/* Sanity check. */
 	assert(h != NULL);
-	assert(obj != NULL);
-	assert(key != NULL);
-	assert(cmp != NULL);
+	assert(getkey != NULL);
 	
-	return(list_get(h->table[key(obj)], obj, cmp));
+	return(list_get(h->table[HASH(h, key)], key, getkey));
 }
 
 /**
  * @brief Removes an object from the hash table.
  */
-void *hash_remove(struct hash *h, void *obj, unsigned (*key)(void *), int (*cmp)(void *, void *))
+void *hash_remove(struct hash *h, unsigned key, unsigned (*getkey)(void *))
 {	
 	/* Sanity check. */
 	assert(h != NULL);
-	assert(obj != NULL);
-	assert(key != NULL);
-	assert(cmp != NULL);
+	assert(getkey != NULL);
 	
-	return(list_remove(h->table[key(obj)], obj, cmp));
+	return(list_remove(h->table[HASH(h, key)], key, getkey));
 	
 }
