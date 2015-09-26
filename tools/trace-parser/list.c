@@ -97,23 +97,22 @@ void list_insert(struct list *l, void *obj)
 }
 
 /**
- * @brief Retrieves an object from a list.
+ * @brief Retrieves an object from a linked list.
  */
-void *list_get(struct list *l, void *key, int (*cmp)(void *, void *))
+void *list_get(struct list *l, unsigned key, unsigned (*getkey)(void *))
 {
 	void *obj;           /* Object to get. */
-	struct list_node *w; /* Walker.           */
+	struct list_node *w; /* Walker.        */
 	
 	/* Sanity check. */
 	assert(l != NULL);
-	assert(key != NULL);
-	assert(cmp != NULL);
+	assert(getkey != NULL);
 	
 	/* Search for object. */
 	for (w = &l->head; w->next != NULL; w = w->next)
 	{
 		/* Found. */
-		if (cmp(key, w->next->obj))
+		if (key == getkey(w->next->obj))
 			goto found;
 	}
 	
@@ -130,7 +129,7 @@ found:
 /**
  * @brief Removes an object from a linked list.
  */
-void *list_remove(struct list *l, void *key, int (*cmp)(void *, void *))
+void *list_remove(struct list *l,  unsigned key, unsigned (*getkey)(void *))
 {
 	void *obj;           /* Object to remove. */
 	struct list_node *t; /* Temporary node.   */
@@ -138,14 +137,13 @@ void *list_remove(struct list *l, void *key, int (*cmp)(void *, void *))
 	
 	/* Sanity check. */
 	assert(l != NULL);
-	assert(key != NULL);
-	assert(cmp != NULL);
+	assert(getkey != NULL);
 	
 	/* Search for object. */
 	for (w = &l->head; w->next != NULL; w = w->next)
 	{
 		/* Found. */
-		if (cmp(key, w->next->obj))
+		if (key == getkey(w->next->obj))
 			goto found;
 	}
 	

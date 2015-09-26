@@ -48,8 +48,8 @@
 	list list_create(void);
 	void list_destroy(list);
 	void list_insert(list, void *);
-	void *list_get(list, void *, int (void *, void *));
-	void *list_remove(list, void *, int (void *, void *));
+	void *list_get(list, unsigned, unsigned (*)(void *));
+	void *list_remove(list, unsigned, unsigned (*)(void *));
 
 #endif /* LIST_H_ */
 
