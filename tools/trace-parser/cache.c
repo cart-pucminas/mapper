@@ -55,6 +55,7 @@ struct
 	size_t obj_size;      /**< Object size.          */
 	struct block *blocks; /**< Cache blocks.         */
 	list free;            /**< List of free blocks.  */
+	unsigned age; 		  /**< Cache age.            */
 } cache;
 
 
@@ -66,17 +67,15 @@ static void cache_evict(void)
 	/* TODO. */
 	// pega o mais antigo e coloca no swap e coloca o bloco na lista de livres
 	
-	int encontrar_block = 0; 
+	int encontrar_block = 0; // tipo boolean para testar se encontrou o bloco
 	unsigned i = 0;
-	unsigned old; 
-	unsigned old_blocks;
+	unsigned old; // age do mais antigo
+	unsigned old_blocks; // índice do mais antigo 
 	
-	struct block *block_write;
-	struct block *block_read;
+	struct block *block_write; //bloco que será escrito
+	struct block *block_read;  //bloco lido do arquivo para comparação com o bloco que será escrito
 	
-	unsigned cont = 0;
-	
-	//Encontrar o primeiro bloco válido 
+	//Encontrar o primeiro bloco válido para inicializar as variáveis old e old_bloks
 	while (!encontrar_block && i < cache_size){
 		
 		//Testar se o block é valido 
@@ -93,7 +92,7 @@ static void cache_evict(void)
 	for (unsigned j = i; j < cache_size; j++){
 		
 		//Testar se o block é valido e se é mais velho que o atual
-		if((cache.blocks[j]->flags = 2 || cache.blocks[j]->flags = 3 )
+		if((cache.blocks[j]->flags = VALIDO_LIMPO || cache.blocks[j]->flags = VALIDO_SUJO )
 			&& cache.blocks[j]->age < old){
 				old = cache.blocks[j]->age;
 				old_blocks = j; 
@@ -101,8 +100,8 @@ static void cache_evict(void)
 	}
 		
 		//Remover da hash
-		/* A função não deveria receber as funções key (chave da hash) e
-		 * cmp(usado para procurar o bloco nas listas da hash) para serem passadas
+		/* A função não deveria receber as funções key (retorna chave da hash) e
+		 * cmp (usado para comparar o bloco procurado com os blocos das listas da hash) para serem passadas
 		 * para a função hash_remove ao invés de ter addr no block
 		 */
 		
@@ -111,26 +110,8 @@ static void cache_evict(void)
 		
 		//Gravar no swap
 		
-		//Procurar o block no swap
-		fseek(cache.swp, 0, SEEK_SET); // Posicionar o ponteiro no ínicio do arquivo 
-		encontrar_block = 0;
-		
-		while(!encontrar_block || cache.swp != EOF){ 
-			
-			cont++;
-			fread(block_read, cache.obj_size, 1, cache.swp);
-		
-			if(cmp (block_read, block_write)){
-					encontrar_block = 1;
-					cont--;
-			}		
-		} 
-		
-		//Posicionar o arquivo na posição de escrita do block
-		
-		cont = cont * cache.obj_size;
-		fseek(cache.swp, cont , SEEK_SET);
-		
+		// Posicionar o ponteiro do arquivo na posição que o bloco será escrito
+		fseek(cache.swp, (block_write->offset * cache.obj_size), SEEK_SET); 
 		fwrite( block_write, cache.obj_size, 1 , cache.swp);
 		
 		//inserir o bloco da lista de livres
@@ -179,6 +160,7 @@ void cache_init(FILE *file, size_t obj_size, unsigned cache_size)
 	cache.obj_size = obj_size;
 	cache.blocks = scalloc(cache_size, sizeof(struct block));
 	cache.free = list_create();
+	cache.age = 0;
 	
 	/* Initialize list of free blocks. */
 	for (unsigned i = 0; i < cache_size; i++)
