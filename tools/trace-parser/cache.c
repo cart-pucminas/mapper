@@ -82,7 +82,7 @@ static void cache_evict(unsigned key)
 	for (unsigned i = 0; i < cache.cache_size; i++)
 	{
 		/* Skip invalid blocks. */
-		if (!(cache.blocks->flags & BLOCK_VALID))
+		if (!(cache.blocks[i].flags & BLOCK_VALID))
 			continue;
 			
 		/* First valid block. */
@@ -133,7 +133,43 @@ void cache_update(void *obj, unsigned addr)
  */
 void cache_flush(void)
 {
-	/* TODO. */
+	/* Flush all valid dirty blocks in the swap file. */
+	for (unsigned i = 0; i < cache.cache_size; i++)
+	{
+		/* Skip invalid and clean blocks. */
+		if (!(cache.blocks[i].flags & BLOCK_VALID))
+			continue;
+		if (!(cache.blocks[i].flags & BLOCK_DIRTY))
+			continue;
+			
+		/* Find offset in swap file. */
+		if (cache.blocks[i].offset < 0)
+		{
+			void *tmp;
+			
+			tmp = smalloc(cache.obj_size);
+			
+			fseek(cache.swp, 0, SEEK_SET);
+			do
+			{
+				/* Read object. */
+				fread(tmp, cache.obj_size, 1, cache.swp);
+				if (ferror(cache.swp))
+					error("failed to flush cache");
+				if (feof(cache.swp) || ferror(cache.swp))
+					break;
+				
+				/* Not this object. */
+				if (memcmp(tmp, cache.blocks[i].obj, cache.obj_size))
+					continue;
+				
+				/* Save offset. */
+				cache.blocks[i].offset = ftell(cache.swp) - cache.obj_size;
+			} while (!feof(cache.swp));
+		}
+		
+		
+	}
 }
 
 /**
