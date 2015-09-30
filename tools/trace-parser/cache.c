@@ -74,7 +74,7 @@ static unsigned getkey(void *obj)
 /**
  * @brief Evicts an object from the cache.
  */
-static unsigned cache_evict()  
+static void cache_evict(void)  
 {
 	unsigned oldest = UINT_MAX;
 	
@@ -108,13 +108,9 @@ static unsigned cache_evict()
 	fseek(cache.swp, (cache.blocks[oldest].offset*cache.obj_size), SEEK_SET); 
 	fwrite(cache.blocks[oldest].obj, cache.obj_size, 1, cache.swp);
 	
-	/* Alterar o flag valido para invalido */
+	/* Insert block in the list of free blocks. */
 	cache.blocks[oldest].flags &= ~BLOCK_VALID;
-		
-	/* Inser block in the list of free blocks. */
 	list_insert(cache.free, &cache.blocks[oldest]);
-	
-	return oldest;
 }
 
 /**
@@ -122,41 +118,29 @@ static unsigned cache_evict()
  */
 void cache_insert(void *obj, unsigned addr)
 {
-	/* TODO. */
+	struct block *b;
 	
-	unsigned free_block = UINT_MAX;
-	
-	//Procurando block livre
-	/* Search for free block. */
-	for (unsigned i = 0; i < cache.cache_size; i++)
+	do
 	{
-		/* Skip valid blocks. */
-		if (cache.blocks[i].flags & BLOCK_VALID)
-			continue;
-		
-		free_block = i;
-		break;
-	
-	}
-	
-	//Se não tiver block livre faz cache_evict
-	if (free_block == UINT_MAX){
-		free_block = cache_evict();
-	}
-	
+		b = list_remove(cache.free, cache.blocks[free_block].addr, getkey);
 
-	list_remove(cache.free, cache.blocks[free_block].addr, getkey);
+		/* Evict oldest block from the cache. */
+		if (b == NULL)
+		{
+			cache_evict();
+			continue;
+		}
+	} while (b == NULL);
 	
-	cache.blocks[free_block].obj = obj;
-	cache.blocks[free_block].addr = addr;
-	cache.blocks[free_block].age = cache.age;
-	cache.blocks[free_block].flags |= BLOCK_VALID;
-	cache.blocks[free_block].flags &= ~BLOCK_DIRTY;
-	cache.blocks[free_block].offset = -1;
+	/* Initialize block. */
+	b->obj = obj;
+	b->addr = addr;
+	b->age = cache.age;
+	b->flags = BLOCK_VALID;
+	b->offset = -1;
  	
-	/* Inser block in the hash. */
-	hash_insert(cache.table, cache.blocks[free_block], addr);
-	
+	/* Insert block in the hash table. */
+	hash_insert(cache.table, b, addr);
 }
 
 /**
