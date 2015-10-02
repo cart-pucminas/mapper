@@ -162,3 +162,33 @@ found:
 	return (obj);
 }
 
+
+/**
+ * @brief Removes the first object from a linked list.
+ */
+void *list_remove_first(struct list *l)
+{
+	void *obj;           /* Object to remove. */
+	struct list_node *t; /* Temporary node.   */
+	struct list_node *h; /* Walker.           */
+	
+	/* Sanity check. */
+	assert(l != NULL);
+	assert(getkey != NULL);
+	
+	h = &l->head;
+	
+	//Lista vazia
+	if(h->next == NULL)
+	return(NULL);
+		
+	obj = h->next->obj;
+
+	/* Remove node from the list. */
+	t = h->next;
+	h->next = t->next;
+	list_node_destroy(t);
+	l->length--;
+	
+	return (obj);
+}

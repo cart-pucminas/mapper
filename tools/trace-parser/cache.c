@@ -122,7 +122,7 @@ void cache_insert(void *obj, unsigned addr)
 	
 	do
 	{
-		b = list_remove(cache.free, cache.blocks[free_block].addr, getkey);
+		b = list_remove_first(cache.free);
 
 		/* Evict oldest block from the cache. */
 		if (b == NULL)
@@ -148,7 +148,24 @@ void cache_insert(void *obj, unsigned addr)
  */
 void cache_update(void *obj, unsigned addr)
 {
+	
 	/* TODO. */
+	struct block *b;
+	
+	//Procurar addr na cache
+	
+	b = hash_get(cache.table, addr, getkey);
+
+	if (b == NULL){
+		error("failed to update cache");
+	}else{
+		
+		b->age = cache.age;
+		b->flags = BLOCK_VALID;
+		
+		memcpy(b->obj, obj, cache.obj_size);
+	}
+	
 }
 
 /**

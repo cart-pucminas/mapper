@@ -50,6 +50,7 @@
 	void list_insert(list, void *);
 	void *list_get(list, unsigned, unsigned (*)(void *));
 	void *list_remove(list, unsigned, unsigned (*)(void *));
+	void *list_remove_first(list);
 
 #endif /* LIST_H_ */
 
