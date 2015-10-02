@@ -28,6 +28,6 @@
 	extern void cache_insert(void *, unsigned);
 	extern void *cache_get(unsigned, unsigned (*)(void * void *));
 	extern void cache_update(void *, unsigned);
-	extern void cache_flush(void);
+	extern void cache_flush(unsigned (*)(void * void *));
 	
 #endif /* CACHE_H_ */

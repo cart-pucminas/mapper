@@ -136,13 +136,12 @@ void cache_insert(void *obj, unsigned addr)
 	b->obj = obj;
 	b->addr = addr;
 	b->age = cache.age;
-	b->flags = BLOCK_VALID | BLOCK_DIRTY;
+	b->flags = BLOCK_VALID | BLOCK_DIRTY; // Bloco valido e sujo
 	b->offset = -1;
  	
 	/* Insert block in the hash table. */
 	hash_insert(cache.table, b, addr);
 }
-
 
 /**
  * @brief Retrieves an object from a cache.
@@ -171,7 +170,7 @@ void *cache_get( unsigned addr, unsigned (*cmp)(void * void *)){
 			if (ferror(cache.swp))
 				error("failed to flush cache");
 			if (feof(cache.swp))
-				return NULL; // Não encontrado
+				return (NULL); // Não encontrado
 				
 				// Not this object. /
 				if (cmp(tmp, addr))
@@ -187,7 +186,7 @@ void *cache_get( unsigned addr, unsigned (*cmp)(void * void *)){
 				/* Insert block in the hash table. */
 				hash_insert(cache.table, b, addr);
 				
-				return b->obj;
+				return (b->obj);
 			} while (!feof(cache.swp));
 	}else{
 		
@@ -197,7 +196,6 @@ void *cache_get( unsigned addr, unsigned (*cmp)(void * void *)){
 	}
 
 }
-
 
 /**
  * @brief Updades an object in the cache.
@@ -217,7 +215,7 @@ void cache_update(void *obj, unsigned addr)
 	}else{
 		
 		b->age = cache.age;
-		b->flags = BLOCK_VALID;
+		b->flags = BLOCK_VALID | BLOCK_DIRTY; //Bloco válido e sujo
 		
 		memcpy(b->obj, obj, cache.obj_size);
 	}
@@ -228,6 +226,38 @@ void cache_update(void *obj, unsigned addr)
  * @brief Flushes the cache to the swap file.
  */
 void cache_flush(void)
+{
+	/* Flush all valid dirty blocks in the swap file. */
+	for (unsigned i = 0; i < cache.cache_size; i++)
+	{
+		/* Skip invalid and clean blocks. */
+		if (!(cache.blocks[i].flags & BLOCK_VALID))
+			continue;
+		if (!(cache.blocks[i].flags & BLOCK_DIRTY))
+			continue;
+			
+		/* Find offset in swap file. */
+		if (cache.blocks[i].offset < 0)
+		{
+			//Gravar no final do arquivo
+			/* Write block to swap file. */
+			fseek(cache.swp, 0, SEEK_END); 
+			fwrite(cache.blocks[i].obj, cache.obj_size, 1, cache.swp);
+			
+		}else{
+			
+			//Gravar na posição offset
+			/* Write block to swap file. */
+			fseek(cache.swp, cache.blocks[i].offset, SEEK_SET); 
+			fwrite(cache.blocks[i].obj, cache.obj_size, 1, cache.swp);
+		}
+		
+		
+	}
+}
+
+
+void cache_flushPedro(void)
 {
 	/* Flush all valid dirty blocks in the swap file. */
 	for (unsigned i = 0; i < cache.cache_size; i++)
