@@ -136,12 +136,68 @@ void cache_insert(void *obj, unsigned addr)
 	b->obj = obj;
 	b->addr = addr;
 	b->age = cache.age;
-	b->flags = BLOCK_VALID;
+	b->flags = BLOCK_VALID | BLOCK_DIRTY;
 	b->offset = -1;
  	
 	/* Insert block in the hash table. */
 	hash_insert(cache.table, b, addr);
 }
+
+
+/**
+ * @brief Retrieves an object from a cache.
+ */
+
+void *cache_get( unsigned addr, unsigned (*cmp)(void * void *)){
+
+/* TODO. */
+	struct block *b;
+		
+	//Procurar addr na cache
+	
+	b = hash_get(cache.table, addr, getkey);
+
+	if (b == NULL){
+		//Procurar addr na swap
+		void *tmp;
+
+		tmp = smalloc(cache.obj_size);
+			
+		fseek(cache.swp, 0, SEEK_SET);
+		do
+		{
+			// Read object. /
+			fread(tmp, cache.obj_size, 1, cache.swp);
+			if (ferror(cache.swp))
+				error("failed to flush cache");
+			if (feof(cache.swp))
+				return NULL; // Não encontrado
+				
+				// Not this object. /
+				if (cmp(tmp, addr))
+					continue;
+				
+				// Save offset. /
+				b->addr = addr;
+				b->age = cache.age;
+				b->flags = BLOCK_VALID  BLOCK_DIRTY; // valido e limpo, como faz?
+				b->obj = tmp;
+				b->offset = ftell(cache.swp) - cache.obj_size;
+				
+				/* Insert block in the hash table. */
+				hash_insert(cache.table, b, addr);
+				
+				return b->obj;
+			} while (!feof(cache.swp));
+	}else{
+		
+		b->age = cache.age;
+		
+		return (b->obj);
+	}
+
+}
+
 
 /**
  * @brief Updades an object in the cache.

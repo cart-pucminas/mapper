@@ -26,6 +26,7 @@
 	/* Forward definitions. */
 	extern void cache_init(FILE *, size_t, unsigned);
 	extern void cache_insert(void *, unsigned);
+	extern void *cache_get(unsigned, unsigned (*)(void * void *));
 	extern void cache_update(void *, unsigned);
 	extern void cache_flush(void);
 	
