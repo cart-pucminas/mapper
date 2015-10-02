@@ -105,7 +105,7 @@ static void cache_evict(void)
 	hash_remove(cache.table, cache.blocks[oldest].addr, getkey);
 
 	/* Write block to swap file. */
-	fseek(cache.swp, (cache.blocks[oldest].offset*cache.obj_size), SEEK_SET); 
+	fseek(cache.swp, cache.blocks[oldest].offset, SEEK_SET); 
 	fwrite(cache.blocks[oldest].obj, cache.obj_size, 1, cache.swp);
 	
 	/* Insert block in the list of free blocks. */
