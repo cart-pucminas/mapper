@@ -4,6 +4,8 @@
 
 # Default rules.
 bin/*
+lib/*
+include/mylib
 *.o
 *.swp
 

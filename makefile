@@ -13,11 +13,17 @@ SRC = $(wildcard src/*.c)        \
 EXEC_RELEASE = mapper
 EXEC_DEBUG = mapper_debug
 
+# MyLib
+export MYLIB = mylib-0.5
+
 # Directories.
-export BINDIR = $(CURDIR)/bin
-export INCDIR = $(CURDIR)/include
-export SRCDIR = $(CURDIR)/src
-export DOCDIR = $(CURDIR)/doc
+export PREFIX      = $(CURDIR)
+export BINDIR      = $(CURDIR)/bin
+export CONTRIBDIR = $(CURDIR)/contrib
+export INCDIR     = $(CURDIR)/include
+export LIBDIR     = $(CURDIR)/lib
+export SRCDIR     = $(CURDIR)/src
+export DOCDIR     = $(CURDIR)/doc
 
 # Toolchain.
 export CC = gcc
@@ -35,25 +41,44 @@ export CFLAGS += -I $(INCDIR)
 all: tools release debug documentation
 
 # Builds the release version.
-release: $(SRC)
+release: lib $(SRC)
 	$(CC) $(CFLAGS) -D NDEBUG $(SRC) -o $(BINDIR)/$(EXEC_RELEASE) -lm
 
 # Builds the debug version.
-debug:
+debug: lib
 	$(CC) $(CFLAGS) -g $(SRC) -o $(BINDIR)/$(EXEC_DEBUG) -lm
+
+# Builds library.
+unexport BINDIR
+unexport INCDIR
+unexport LIBDIR
+unexport SRCDIR
+unexport DOCDIR
+unexport CC
+unexport CFLAGS
+lib:
+	cd $(CONTRIBDIR) && \
+	mkdir -p $(MYLIB) && \
+	tar -xjvf $(MYLIB).tar.bz2 --directory $(MYLIB) && \
+	cd $(MYLIB) &&\
+	$(MAKE) install PREFIX=$(PREFIX)
+	rm -rf $(CONTRIBDIR)/$(MYLIB)
 
 # Builds the documentation:
 documentation: $(DOCDIR)/mapper.1
 	man -t $< | ps2pdf - > $(DOCDIR)/mapper.pdf
 
 # Builds all toosl.
-tools:
+tools: lib
 	cd tools/ && $(MAKE) all
 
 # Clean.
 clean:
+	cd tools && $(MAKE) clean
+	rm -rf $(INCDIR)/mylib
+	rm -rf $(LIBDIR)
 	rm -f $(BINDIR)/$(EXEC_DEBUG)
 	rm -f $(BINDIR)/$(EXEC_RELEASE)
+	rm -f $(BINDIR)/$(EXEC_RELEASE)
 	rm -f $(DOCDIR)/*.pdf
-	cd tools && $(MAKE) clean
 	
