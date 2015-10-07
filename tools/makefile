@@ -18,7 +18,7 @@ trace-packer: trace-packer.c
 
 # Builds PIN trace parser.
 trace-parser: trace-parser/*.c
-	$(CC) $(CFLAGS) trace-parser/*.c -o $(BINDIR)/trace-parser
+	$(CC) $(CFLAGS) trace-parser/*.c -o $(BINDIR)/trace-parser $(LIBS)
 
 # Cleans compilation files.
 clean:

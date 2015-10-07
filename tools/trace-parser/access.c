@@ -20,8 +20,9 @@
 
 #include <stdlib.h>
 
+#include <mylib/util.h>
+
 #include "access.h"
-#include "util.h"
 
 /**
  * @brief Creates a memory access.
