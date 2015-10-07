@@ -49,13 +49,6 @@ debug: lib
 	$(CC) $(CFLAGS) -g $(SRC) -o $(BINDIR)/$(EXEC_DEBUG) -lm
 
 # Builds library.
-unexport BINDIR
-unexport INCDIR
-unexport LIBDIR
-unexport SRCDIR
-unexport DOCDIR
-unexport CC
-unexport CFLAGS
 lib:
 	cd $(CONTRIBDIR) && \
 	mkdir -p $(MYLIB) && \
