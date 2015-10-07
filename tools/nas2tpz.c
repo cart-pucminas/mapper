@@ -36,18 +36,29 @@ static struct
 } topology = { 0, 0, 0 };
 
 /**
+ * @brief Prints an error message and aborts.
+ */
+static void error(const char *msg)
+{
+	fprintf(stderr, "error: %s\n", msg);
+	exit(EXIT_FAILURE);
+}
+
+/**
  * @brief Converts NAS trace file to Topaz input file.
  */
 static void nas2tpz(FILE *nasfilep)
 {
-	float start;     /* Start of transmission. */
-	unsigned size;   /* Size of the message.   */
-	unsigned dest;   /* Destination process.   */
-	unsigned source; /* Source process.        */
-	float offset;    /* Time offset.           */
+	float start;     /* Start of transmission.     */
+	unsigned size;   /* Size of the message.       */
+	unsigned dest;   /* Destination process.       */
+	unsigned source; /* Source process.            */
+	float offset;    /* Time offset.               */
+	int ret;         /* Return value for fscanf(). */
 	
 	/* Convert NAS trace file. */
-	fscanf(nasfilep, "%f %*u %*c %u %u %*c %u", &start, &source, &dest, &size);
+	if (fscanf(nasfilep, "%f %*u %*c %u %u %*c %u", &start, &source, &dest, &size) < 0)
+		error("io error");
 	offset = start;
 	while (!feof(nasfilep))
 	{
@@ -60,17 +71,9 @@ static void nas2tpz(FILE *nasfilep)
 			dest/topology.ncols, dest%topology.ncols, 0,
 			size);
 		
-		fscanf(nasfilep, "%f %*u %*c %u %u %*c %u", &start,&source,&dest,&size);
+		if (fscanf(nasfilep, "%f %*u %*c %u %u %*c %u", &start,&source,&dest,&size) < 0)
+			error("io error");
 	}
-}
-
-/**
- * @brief Prints an error message and aborts.
- */
-static void error(const char *msg)
-{
-	fprintf(stderr, "error: %s\n", msg);
-	exit(EXIT_FAILURE);
 }
 
 /**
