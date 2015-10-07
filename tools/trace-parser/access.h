@@ -23,6 +23,7 @@
 
 	#include <stdio.h>
 	#include <stdint.h>
+	#include <mylib/object.h>
 
 	/**
 	 * @brief Memory access.
@@ -33,8 +34,13 @@
 		int access[12]; /**< Access per thread. */
 	};
 	
+	
+	
+	
 	/* Forward definitions. */
 	extern struct access *access_create(void);
 	extern void access_destroy(struct access *);
+	
+	extern const struct objinfo access_info;
 
 #endif /* ACCESS_H_ */
