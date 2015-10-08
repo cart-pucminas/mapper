@@ -100,15 +100,13 @@ void matrix_generate(FILE *swp, struct matrix *m){
 	a = smalloc(sizeof(struct access));
 
 	while(!feof(swp)){
-		
-		//a = access_read(swp);
 		//Ler acessos gravados na swap
-		if (fread(a, sizeof(struct access), 1, swp) != 1)
-		{
-			if (ferror(swp))
-				error("I/O error");
+		a = access_read(swp);
+		if (a==NULL){
+				printf("Erro ao ler o acesso do arquivo");
+				break;
 		}
-		
+
 		//Verificar os compartilhamentos entre cada par de threads
 		for(x=0; x <QTD_THREADS; x++ ){
 			for(y=0; y<QTD_THREADS; y++){
