@@ -26,10 +26,13 @@
 
 #include <mylib/util.h>
 #include <mylib/object.h>
+#include <mylib/matrix.h>
+
 
 
 
 extern void trace_read(struct cache *, FILE *, int);
+extern void matrix_generate(FILE *, struct matrix *);
 
 
 #endif /* TRACE-PARSER_H_ */

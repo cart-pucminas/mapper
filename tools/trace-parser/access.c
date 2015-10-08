@@ -92,6 +92,7 @@ static object_t access_read(FILE *file)
 	{
 		if (ferror(file))
 			error("I/O error");
+			return (NULL);
 	}
 	
 	return (p);
