@@ -61,13 +61,10 @@ static matrix_t read_data(FILE *input)
 	
 	/* Read communication matrix. */
 	fseek(input, 0, SEEK_SET);
-	fscanf(input, "%u %u %u\n", &src, &dest, &size);
-	while (!feof(input))
+	while (fscanf(input, "%u %u %u\n", &src, &dest, &size) != EOF)
 	{
 		matrix_set(m, dest, src, matrix_get(m, dest, src) + size);
 		matrix_set(m, src, dest, matrix_get(m, src, dest) + size);
-        	
-		fscanf(input, "%u %u %u\n", &src, &dest, &size);
 	}
 	
 	return (m);

@@ -1,16 +1,23 @@
+# Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com>
 #
-# Copyright(C) 2013 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+# This file is part of Mapper.
 #
-
-# Source files.
-SRC = $(wildcard src/*.c)
+# Mapper is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Mapper is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with MyLib. If not, see <http://www.gnu.org/licenses/>.
 
 # Executable files.
-EXEC_RELEASE = mapper
-EXEC_DEBUG = mapper_debug
+export EXEC = mapper
 
-# MyLib
-export MYLIB = mylib-0.6
 
 # Directories.
 export PREFIX      = $(CURDIR)
@@ -25,6 +32,7 @@ export DOCDIR     = $(CURDIR)/doc
 export CC = gcc
 
 # Libraries.
+export MYLIB = mylib-0.6
 export LIBS = $(LIBDIR)/libmy.a -fopenmp -lm
 
 # Toolchain configuration.
@@ -36,23 +44,16 @@ export CFLAGS += -I $(INCDIR)
 # Phony list.
 .PHONY: tools
 
-# Builds the release and debug versions.
-all: release debug documentation
-
-# Builds the release version.
-release: lib $(SRC)
-	$(CC) $(CFLAGS) -D NDEBUG $(SRC) -o $(BINDIR)/$(EXEC_RELEASE) $(LIBS)
-
-# Builds the debug version.
-debug: lib
-	$(CC) $(CFLAGS) -g $(SRC) -o $(BINDIR)/$(EXEC_DEBUG) $(LIBS)
+# Builds mapper.
+all: lib
+	cd $(SRCDIR) && $(MAKE) all
 
 # Builds library.
 lib:
-	cd $(CONTRIBDIR) && \
-	mkdir -p $(MYLIB) && \
+	cd $(CONTRIBDIR) &&                                \
+	mkdir -p $(MYLIB) &&                               \
 	tar -xjvf $(MYLIB).tar.bz2 --directory $(MYLIB) && \
-	cd $(MYLIB) &&\
+	cd $(MYLIB) &&                                     \
 	$(MAKE) install PREFIX=$(PREFIX)
 	rm -rf $(CONTRIBDIR)/$(MYLIB)
 
@@ -67,10 +68,8 @@ tools: lib
 # Clean.
 clean:
 	cd tools && $(MAKE) clean
+	cd src && $(MAKE) clean
 	rm -rf $(INCDIR)/mylib
 	rm -rf $(LIBDIR)
-	rm -f $(BINDIR)/$(EXEC_DEBUG)
-	rm -f $(BINDIR)/$(EXEC_RELEASE)
-	rm -f $(BINDIR)/$(EXEC_RELEASE)
 	rm -f $(DOCDIR)/*.pdf
 	
