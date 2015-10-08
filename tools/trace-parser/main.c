@@ -88,16 +88,16 @@ int main(int argc, char **argv)
 	fclose(swp);
 	
 	//Gravar a matrix de compartilhamento em um arquivo
-	FILE * matrix_share; 
-	swp = fopen("matrix-share.out", "w");
-	if(matrix_share == NULL){
+	FILE * matrix_shared; 
+	matrix_shared = fopen("matrix-shared.out", "w");
+	if(matrix_shared == NULL){
 		printf("Arquivo para gravação da matrix não pode ser aberto");
 		return(EXIT_FAILURE);
 	}
 	
 	for(x=0; x<QTD_THREADS; x++){
 		for(y=0; y<QTD_THREADS; x++){
-			fprintf(matrix_share, "%d;%d;%d\n", x, y, matrix_get(m, x, y));	
+			fprintf(matrix_shared, "%d;%d;%d\n", x, y, matrix_get(m, x, y));	
 				
 				
 		}
@@ -105,8 +105,8 @@ int main(int argc, char **argv)
 	
 	
 	
+	fclose(matrix_shared);
 	
-
 	return (EXIT_SUCCESS);
 }
 
