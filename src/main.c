@@ -1,40 +1,34 @@
 /*
- * Copyright (C) 2013 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ * Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com>
  *
- * <main.c> - main() function of the application.
+ * This file is part of Mapper.
+ *
+ * Mapper is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Mapper is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MyLib. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <kmeans.h>
 
-/**
- * @brief Mesh topology.
- */
-struct
-{
-	unsigned height;
-	unsigned width;
-} noc;
+#include <mylib/matrix.h>
+#include <mylib/util.h>
+#include <mylib/vector.h>
 
-/**
- * @brief Number of clusters.
- */
-unsigned nclusters;
+#include "mapper.h"
 
-/**
- * @brief Minimum distance.
- */
-unsigned mindistance;
-
-/**
- * @brief Prints an error message and exits.
- */
-static void error(const char *msg)
-{
-	fprintf(stderr, "error: %s\n", msg);
-	exit(EXIT_FAILURE);
-}
+/* Program arguments. */
+static char *filename;  /* Input filename.      */
+static unsigned nprocs; /* Number of processes. */
 
 /**
  * @brief Prints program usage and exits.
@@ -51,22 +45,32 @@ static void usage(void)
  */
 static void readargs(int argc, char **argv)
 {
-	/* Missing arguments. */
-	if (argc < 5)
-	{
-		printf("missing arguments\n");
-		usage();
-	}
+	filename = argv[1];
+}
 
-	sscanf(argv[2], "%u %*c %u", &noc.height, &noc.width);
-	if ((noc.height == 0) || (noc.width == 0))
-		error("invalid manycore processor size");
+/**
+ * @brief Reads input data.
+ */
+static matrix_t read_data(FILE *input)
+{
+	matrix_t m;         /* Communication matrix.        */
+	unsigned size;      /* Size of communication.      */
+	unsigned src, dest; /* Source and target processes. */
 	
-	sscanf(argv[3], "%u", &nclusters);
-	if ((nclusters == 0))
-		error("invalid number of clusters");
+	m = matrix_create(nprocs, nprocs);
 	
-	sscanf(argv[4], "%u", &mindistance);
+	/* Read communication matrix. */
+	fseek(input, 0, SEEK_SET);
+	fscanf(input, "%u %u %u\n", &src, &dest, &size);
+	while (!feof(input))
+	{
+		matrix_set(m, dest, src, matrix_get(m, dest, src) + size);
+		matrix_set(m, src, dest, matrix_get(m, src, dest) + size);
+        	
+		fscanf(input, "%u %u %u\n", &src, &dest, &size);
+	}
+	
+	return (m);
 }
 
 /*
@@ -76,16 +80,15 @@ int main(int argc, char **argv)
 {
 	FILE *input;
 	
-	readargs(argc, argv);
-
 	/* Open input file. */
-	input = fopen(argv[1], "r");
-	if (input == NULL)
-		error("failed to open input file");
-
-	kmeans(nclusters, mindistance, input);
-
+	if ((input = fopen(filename, "r")) == NULL)
+		error("cannot open input file");
+	
+	read_data(input);
+	
+	/* House keeping. */
 	fclose(input);
+	
 
 	return (0);
 }

@@ -3,11 +3,7 @@
 #
 
 # Source files.
-SRC = $(wildcard src/*.c)        \
-	  $(wildcard src/kmeans/*.c) \
-	  $(wildcard src/list/*.c)   \
-	  $(wildcard src/matrix/*.c) \
-	  $(wildcard src/vector/*.c) \
+SRC = $(wildcard src/*.c)
 
 # Executable files.
 EXEC_RELEASE = mapper
@@ -41,15 +37,15 @@ export CFLAGS += -I $(INCDIR)
 .PHONY: tools
 
 # Builds the release and debug versions.
-all: tools release debug documentation
+all: release debug documentation
 
 # Builds the release version.
 release: lib $(SRC)
-	$(CC) $(CFLAGS) -D NDEBUG $(SRC) -o $(BINDIR)/$(EXEC_RELEASE) -lm
+	$(CC) $(CFLAGS) -D NDEBUG $(SRC) -o $(BINDIR)/$(EXEC_RELEASE) $(LIBS)
 
 # Builds the debug version.
 debug: lib
-	$(CC) $(CFLAGS) -g $(SRC) -o $(BINDIR)/$(EXEC_DEBUG) -lm
+	$(CC) $(CFLAGS) -g $(SRC) -o $(BINDIR)/$(EXEC_DEBUG) $(LIBS)
 
 # Builds library.
 lib:
