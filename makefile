@@ -14,7 +14,7 @@ EXEC_RELEASE = mapper
 EXEC_DEBUG = mapper_debug
 
 # MyLib
-export MYLIB = mylib-0.5
+export MYLIB = mylib-0.6
 
 # Directories.
 export PREFIX      = $(CURDIR)
