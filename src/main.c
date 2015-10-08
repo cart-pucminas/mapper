@@ -27,16 +27,21 @@
 #include "mapper.h"
 
 /* Program arguments. */
-static char *filename;  /* Input filename.      */
-static unsigned nprocs; /* Number of processes. */
+static char *comm_filename = NULL; /* Communication matrix filename. */
+static char *topo_filename = NULL; /* Topology filename.             */
+static unsigned nprocs = NULL;     /* Number of processes.           */
 
 /**
  * @brief Prints program usage and exits.
  */
 static void usage(void)
 {
-	printf("Usage: mapper <input> <topology> <nclusters> <mindistance>\n");
-	printf("Brief: maps processes on a manycore processor");
+	printf("Usage: mapper [options] --nprocs <num> --communication <filename>\n\n");
+	printf("Brief maps processes on a processor\n\n");
+	printf("Options:\n");
+	printf("    --kmeans <nclusters>  use kmeans strategy\n");
+	printf("    --topology <filename> topology file\n");
+	
 	exit(EXIT_SUCCESS);
 }
 
@@ -45,13 +50,20 @@ static void usage(void)
  */
 static void readargs(int argc, char **argv)
 {
-	filename = argv[1];
+	UNUSED(argc);
+	UNUSED(argv);
+	
+	usage();
 }
 
 /**
- * @brief Reads input data.
+ * @brief Reads communication matrix.
+ * 
+ * @param file Target file.
+ * 
+ * @returns Communication matrix.
  */
-static matrix_t read_data(FILE *input)
+static matrix_t read_communication_matrix(FILE *input)
 {
 	matrix_t m;         /* Communication matrix.        */
 	unsigned size;      /* Size of communication.      */
@@ -77,15 +89,15 @@ int main(int argc, char **argv)
 {
 	FILE *input;
 	
-	/* Open input file. */
-	if ((input = fopen(filename, "r")) == NULL)
-		error("cannot open input file");
+	usage();
 	
-	read_data(input);
+	read_communication_matrix(input);
+	
+	/* Open input file. */
+	if ((input = fopen(comm_filename, "r")) == NULL)
+		error("cannot open input file");
 	
 	/* House keeping. */
 	fclose(input);
-	
-
 	return (0);
 }
