@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <mylib/matrix.h>
 #include <mylib/util.h>
@@ -26,10 +27,16 @@
 
 #include "mapper.h"
 
+#define USE_KMEANS        (1 << 0)
+#define USE_COMMUNICATION (1 << 1)
+#define USE_TOPOLOGY      (1 << 2)
+
 /* Program arguments. */
-static char *comm_filename = NULL; /* Communication matrix filename. */
-static char *topo_filename = NULL; /* Topology filename.             */
-static unsigned nprocs = NULL;     /* Number of processes.           */
+static unsigned flags = 0;         /* Argument flags.       */
+static FILE *communication = NULL; /* Communication matrix. */
+static FILE *topology = NULL;      /* Topology filename.    */
+static unsigned nprocs = 0;        /* Number of processes.  */
+static unsigned nclusters = 0;     /* Number of clusters.   */
 
 /**
  * @brief Prints program usage and exits.
@@ -50,10 +57,78 @@ static void usage(void)
  */
 static void readargs(int argc, char **argv)
 {
-	UNUSED(argc);
-	UNUSED(argv);
+	/* Parsing states. */
+	enum parsing_states {
+		STATE_READ_ARG,         /* Read argument.           */
+		STATE_SET_KMEANS,       /* Set kmeans parameters.   */
+		STATE_SET_TOPOLOGY,     /* Set topology file.       */
+		STATE_SET_NPROCS,       /* Set number of processes. */
+		STATE_SET_COMMUNICATION /* Set communication file. */
+	};
 	
-	usage();
+	int state;
+	
+	/* Parse command line parameters. */
+	state = STATE_READ_ARG;
+	for (int i = 0; i < argc; i++)
+	{
+		char *arg = argv[i];
+		
+		/* Set value. */
+		if (state != STATE_READ_ARG)
+		{
+			switch (state)
+			{
+				/* Set kmeans parameters. */
+				case STATE_SET_KMEANS:
+					flags |= USE_KMEANS;
+					nclusters = atoi(arg);
+					break;
+					
+				/* Set topology file. */
+				case STATE_SET_TOPOLOGY:
+					flags |= USE_TOPOLOGY;
+					if (topology != NULL)
+						topology = freopen(arg, "r", topology);
+					else
+						topology = fopen(arg, "r");
+					break;
+				
+				/* Set number of processes. */
+				case STATE_SET_NPROCS:
+					nprocs = atoi(arg);
+					break;
+				
+				/* Set communication files. */
+				case STATE_SET_COMMUNICATION:
+					flags |= USE_COMMUNICATION;
+					if (communication != NULL)
+						communication = freopen(arg, "r", communication);
+					else
+						communication = fopen(arg, "r");
+					break;
+				
+				/* Wrong usage. */
+				default:
+					usage();
+			}
+			
+			state = STATE_READ_ARG;
+			continue;
+		}
+		
+		/* Parse argument. */
+		if (!strcmp(arg, "--help"))
+			usage();
+		else if (!strcmp(arg, "--kmeans"))
+			state = STATE_SET_KMEANS;
+		else if(!strcmp(arg, "--topology"))
+			state = STATE_SET_TOPOLOGY;
+		else if (!strcmp(arg, "--nprocs"))
+			state = STATE_SET_NPROCS;
+		else if (!strcmp(arg, "--communication"))
+			state = STATE_SET_COMMUNICATION;
+	}
 }
 
 /**
@@ -66,7 +141,7 @@ static void readargs(int argc, char **argv)
 static matrix_t read_communication_matrix(FILE *input)
 {
 	matrix_t m;         /* Communication matrix.        */
-	unsigned size;      /* Size of communication.      */
+	unsigned size;      /* Size of communication.       */
 	unsigned src, dest; /* Source and target processes. */
 	
 	m = matrix_create(nprocs, nprocs);
@@ -87,17 +162,13 @@ static matrix_t read_communication_matrix(FILE *input)
  */
 int main(int argc, char **argv)
 {
-	FILE *input;
+	readargs(argc, argv);
 	
-	usage();
-	
-	read_communication_matrix(input);
-	
-	/* Open input file. */
-	if ((input = fopen(comm_filename, "r")) == NULL)
-		error("cannot open input file");
+	read_communication_matrix(communication);
 	
 	/* House keeping. */
-	fclose(input);
+	fclose(communication);
+	if (flags & USE_TOPOLOGY)
+		fclose(topology);
 	return (0);
 }
