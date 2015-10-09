@@ -19,9 +19,12 @@
  */
 
 #include <inttypes.h> 
+#include <mylib/util.h>
 #include <mylib/cache.h>
 #include <mylib/object.h>
+#include <mylib/matrix.h>
 #include "access.h"
+
 
 
 
@@ -35,6 +38,8 @@
 	char ponto1; //recebe o ponto e vírgula
 	char ponto2; //recebe o ponto e vírgula
 	
+	int y;
+	
 	struct access *accessMem;
 	
 	while( (fscanf(trace,"%s", line))!=EOF ){
@@ -45,21 +50,82 @@
 			printf("\n size = %d\n", size);
 			printf("\n addr = %" PRIx64 "\n", addr);
 			
-			//Buscar o access do addr lido na cache
-			accessMem = (struct access*) cache_get(c, addr);
-			
-			if (accessMem !=NULL){
-				//Acrescentar o acesso lido 
-				accessMem->access[th] +=size;
-				//Atualizar a cache
-				cache_update(c, accessMem);
-			}else{
-				//Criar um novo access
-				accessMem = access_create();
-				accessMem->addr = addr;
-				accessMem->access[th]  += size;
-				//Inserir na cache
-				cache_insert(c, accessMem);
+			uint64_t x;
+			for( x = addr; x < (addr+size); x++ ){
+		
+				//Buscar o access do addr lido na cache
+				accessMem = (struct access*) cache_get(c, x);
+				
+				if (accessMem !=NULL){
+					//Acrescentar o acesso lido 
+					if (rw == 'W')
+						accessMem->access[th] += 2;
+					else
+						accessMem->access[th] += 1;
+					//Atualizar a cache
+					cache_update(c, accessMem);
+				}else{
+					//Criar um novo access
+					accessMem = access_create();
+					accessMem->addr = x;
+					//Inicializar vetor de acessos
+					for(y=0; y<QTD_THREADS; y++){
+							accessMem->access[y] = 0;
+					}
+										
+					if (rw == 'W')
+						accessMem->access[th] += 2;
+					else
+						accessMem->access[th] += 1;
+					
+					//Inserir na cache
+					cache_insert(c, accessMem);
+				}
 			}
 		}
+	
+}
+
+
+
+void matrix_generate(FILE *swp, struct matrix *m){
+	
+	//Pensar e entender matrix , percorrer cache 
+	int x;
+	int y;
+	int e;
+	
+	
+	struct access *a;
+	a = smalloc(sizeof(struct access));
+
+	while(!feof(swp)){
+		//Ler acessos gravados na swap
+		a = access_read(swp);
+		if (a==NULL){
+				printf("Erro ao ler o acesso do arquivo");
+				break;
+		}
+
+		//Verificar os compartilhamentos entre cada par de threads
+		for(x=0; x <QTD_THREADS; x++ ){
+			for(y=0; y<QTD_THREADS; y++){
+				
+				if(a->access[x] != 0 && a->access[y] != 0){
+					//Obter a quantidade de bytes compartilhados pelas
+					//threads X, Y até o momento
+					e = matrix_get(m, x, y);
+					
+					if (a->access[x] <= a->access[y])
+						e += a->access[x];
+					else
+						e += a->access[y];	
+						
+					matrix_set(m, x, y, e);	
+				
+				}			
+			}
+		}
+	}
+	
 }

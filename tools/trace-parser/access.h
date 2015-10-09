@@ -25,13 +25,17 @@
 	#include <stdint.h>
 	#include <mylib/object.h>
 
+
+	#define QTD_THREADS 12
+
+
 	/**
 	 * @brief Memory access.
 	 */
 	struct access
 	{
 		uint64_t addr;  /** Address.            */
-		int access[12]; /**< Access per thread. */
+		int access[QTD_THREADS]; /**< Access per thread. */
 	};
 	
 	
