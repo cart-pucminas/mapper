@@ -37,7 +37,7 @@ export LIBS = $(LIBDIR)/libmy.a -fopenmp -lm
 
 # Toolchain configuration.
 export CFLAGS += -std=c99
-# export CFLAGS += -Wall -Wextra
+export CFLAGS += -Wall -Wextra
 export CFLAGS += -O3
 export CFLAGS += -I $(INCDIR) 
 
