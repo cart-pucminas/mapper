@@ -27,6 +27,50 @@
 
 #include "mapper.h"
 
+/*===========================================================================*
+ *                                Kmeans Strategy                            *
+ *===========================================================================*/
+
+/**
+ * @brief Computes centroids.
+ *
+ * @param data      Target data.
+ * @param map       Cluster map.
+ * @param nclusters Number of clusters.
+ *
+ * @returns Centroids.
+ */
+static vector_t *compute_centroids
+(const vector_t *data, int npoints, int *map, unsigned nclusters)
+{
+	int *count;          /* Number points in each cluster. */
+	vector_t *centroids; /* Centroids.                     */
+
+	/* Create centroids. */
+	centroids = smalloc(nclusters*sizeof(vector_t));
+	count = smalloc(nclusters*sizeof(int));
+	for (unsigned i = 0; i < nclusters; i++)
+	{
+		count[i] = 0;
+		centroids[i] = vector_create(vector_dimension(data[i]));
+	}
+
+	/* Compute centroids. */
+	for (int i = 0; i < npoints; i++)
+	{
+		count[map[i]]++;
+		vector_add(centroids[map[i]], data[i]);
+	}
+	for (unsigned i = 0; i < nclusters; i++)
+		vector_scalar(centroids[i], count[i]);
+
+	/* House keeping. */
+	free(count);
+
+	return (centroids);
+}
+
+
 /**
  * @brief Maps processes using kmeans algorithm.
  *
@@ -38,39 +82,24 @@
  */
 static int *map_kmeans(const vector_t *procs, unsigned nprocs, unsigned nclusters)
 {
-	int *map;            /* Process map.                   */
-	int *npoints;        /* Number points in each cluster. */
-	vector_t *centroids; /* Centroids.                     */
-
-	/* Create centroids. */
-	centroids = smalloc(nclusters*sizeof(vector_t));
-	npoints = smalloc(nclusters*sizeof(int));
-	for (unsigned i = 0; i < nclusters; i++)
-	{
-		npoints[i] = 0;
-		centroids[i] = vector_create(vector_dimension(procs[i]));
-	}
+	int *map;            /* Process map. */
+	vector_t *centroids; /* Centroids.   */
 
 	map = kmeans(procs, nprocs, nclusters, 0.0);
 
-	/* Compute centroids. */
-	for (unsigned i = 0; i < nprocs; i++)
-	{
-		npoints[map[i]]++;
-		vector_add(centroids[map[i]], procs[i]);
-	}
-	for (unsigned i = 0; i < nclusters; i++)
-		vector_scalar(centroids[i], npoints[i]);
+	centroids = compute_centroids(procs, nprocs, map, nclusters);
 
 	/* House keeping. */
 	for (unsigned i = 0; i < nclusters; i++)
 		vector_destroy(centroids[i]);
 	free(centroids);
-	free(npoints);
 
 	return (map);
 }
 
+/*===========================================================================*
+ *                               Public Interface                            *
+ *===========================================================================*/
 
 /**
  * @brief Maps process.
