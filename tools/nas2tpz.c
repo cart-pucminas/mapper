@@ -1,26 +1,31 @@
 /*
- * Copyright(C) 2011-2014 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ * Copyright(C) 2011-2015 Pedro H. Penna <pedrohenriquepenna@gmail.com>
  *
- * This file is part of mapper.
+ * This file is part of Mapper.
  *
- * mapper is free software; you can redistribute it and/or modify
+ * Mapper is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mapper is distributed in the hope that it will be useful,
+ * Mapper is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with mapper. If not, see <http://www.gnu.org/licenses/>.
+ * along with MyLib. If not, see <http://www.gnu.org/licenses/>.
  */
  
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
+#include <mylib/util.h>
+
+/**
+ * @brief Mega: 10^6
+ */
 #define MEGA 1000000
 
 /**
@@ -37,15 +42,6 @@ static struct
 	unsigned nrows;     /**< Number of rows.       */
 	unsigned ncols;     /**< Number of columns.    */
 } topology = { 0, 0, 0 };
-
-/**
- * @brief Prints an error message and aborts.
- */
-static void error(const char *msg)
-{
-	fprintf(stderr, "error: %s\n", msg);
-	exit(EXIT_FAILURE);
-}
 
 /**
  * @brief Converts NAS trace file to Topaz input file.
