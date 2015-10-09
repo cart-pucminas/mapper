@@ -28,6 +28,51 @@
 #include "mapper.h"
 
 /**
+ * @brief Maps processes using kmeans algorithm.
+ *
+ * @param procs     Processes.
+ * @param nprocs    Number of processes.
+ * @param nclusters Number of clusters.
+ *
+ * @returns A process map.
+ */
+static int *map_kmeans(const vector_t *procs, unsigned nprocs, unsigned nclusters)
+{
+	int *map;            /* Process map.                   */
+	int *npoints;        /* Number points in each cluster. */
+	vector_t *centroids; /* Centroids.                     */
+
+	/* Create centroids. */
+	centroids = smalloc(nclusters*sizeof(vector_t));
+	npoints = smalloc(nclusters*sizeof(int));
+	for (unsigned i = 0; i < nclusters; i++)
+	{
+		npoints[i] = 0;
+		centroids[i] = vector_create(vector_dimension(procs[i]));
+	}
+
+	map = kmeans(procs, nprocs, nclusters, 0.0);
+
+	/* Compute centroids. */
+	for (unsigned i = 0; i < nprocs; i++)
+	{
+		npoints[map[i]]++;
+		vector_add(centroids[map[i]], procs[i]);
+	}
+	for (unsigned i = 0; i < nclusters; i++)
+		vector_scalar(centroids[i], npoints[i]);
+
+	/* House keeping. */
+	for (unsigned i = 0; i < nclusters; i++)
+		vector_destroy(centroids[i]);
+	free(centroids);
+	free(npoints);
+
+	return (map);
+}
+
+
+/**
  * @brief Maps process.
  */
 int *process_map(unsigned nprocs, matrix_t communication, unsigned nclusters)
@@ -44,9 +89,9 @@ int *process_map(unsigned nprocs, matrix_t communication, unsigned nclusters)
 		for (unsigned j = 0; j < nprocs; j++)
 			vector_set(procs[i], j, matrix_get(communication, i, j));
 	}
-	
-	map = kmeans(procs, nprocs, nclusters, 0.0);
-	
+
+	map = map_kmeans(procs, nprocs, nclusters);
+
 	/* House keeping. */
 	for (unsigned i = 0; i < nprocs; i++)
 		vector_destroy(procs[i]);
