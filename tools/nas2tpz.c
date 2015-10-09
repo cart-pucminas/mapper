@@ -48,17 +48,19 @@ static struct
  */
 static void nas2tpz(FILE *nasfilep)
 {
-	float start;     /* Start of transmission.     */
-	unsigned size;   /* Size of the message.       */
-	unsigned dest;   /* Destination process.       */
-	unsigned source; /* Source process.            */
-	float offset;    /* Time offset.               */
-	int ret;         /* Return value for fscanf(). */
+	float start;     /* Start of transmission. */
+	unsigned size;   /* Size of the message.   */
+	unsigned dest;   /* Destination process.   */
+	unsigned source; /* Source process.        */
+	float offset;    /* Time offset.           */
 	
 	/* Convert NAS trace file. */
-	offset = start;
+	offset = -1.0;
 	while (fscanf(nasfilep, "%f %u %u %u", &start, &source, &dest, &size) != EOF)
 	{
+		if (offset < 0.0)
+			offset = start;
+
 		start -= offset;
 		start *= MEGA;
 		

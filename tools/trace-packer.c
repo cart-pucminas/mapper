@@ -28,6 +28,9 @@ int main(int argc, char **argv)
 	uint64_t addr;
 	char line[80];
 
+	(void)(argc);
+	(void)(argv);
+
 	while (fgets(line, sizeof(line), stdin) != NULL)
 	{
 		sscanf(line, "%c%d%" PRIu64 "%*d", &rw, &size, &addr);
