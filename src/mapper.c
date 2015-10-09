@@ -142,7 +142,7 @@ static int *map_kmeans(const vector_t *procs, unsigned nprocs, unsigned ncluster
 	
 	/* Print average distance. */
 	for (unsigned i = 0; i < nclusters; i++)
-		printf("cluster %d: %lf\n", i, avg[i]);
+		fprintf(stderr, "cluster %d: %lf\n", i, avg[i]);
 
 	/* House keeping. */
 	for (unsigned i = 0; i < nclusters; i++)
@@ -172,7 +172,12 @@ int *process_map(unsigned nprocs, matrix_t communication, unsigned nclusters)
 		procs[i] = vector_create(nprocs);
 		
 		for (unsigned j = 0; j < nprocs; j++)
-			vector_set(procs[i], j, matrix_get(communication, i, j));
+		{
+			double a;
+			
+			vector_set(procs[i], j, 
+					((a = matrix_get(communication, i, j)) > 0) ? 1.0/a : a);
+		}
 	}
 
 	map = map_kmeans(procs, nprocs, nclusters);
