@@ -8,6 +8,7 @@ lib/*
 include/mylib
 *.o
 *.swp
+*.pdf
 
 # Exceptions.
 !bin/.gitignore

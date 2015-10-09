@@ -19,6 +19,9 @@
  
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+
+#define MEGA 1000000
 
 /**
  * @brief NAS trace filename.
@@ -57,22 +60,17 @@ static void nas2tpz(FILE *nasfilep)
 	int ret;         /* Return value for fscanf(). */
 	
 	/* Convert NAS trace file. */
-	if (fscanf(nasfilep, "%f %*u %*c %u %u %*c %u", &start, &source, &dest, &size) < 0)
-		error("io error");
 	offset = start;
-	while (!feof(nasfilep))
+	while (fscanf(nasfilep, "%f %u %u %u", &start, &source, &dest, &size) != EOF)
 	{
 		start -= offset;
-		start *= 1000000;
+		start *= MEGA;
 		
 		fprintf(stdout, "%u %u %u %u %u %u %u %u\n",
-			(unsigned)start,
+			(unsigned)floor(start),
 			source/topology.ncols, source%topology.ncols, 0,
 			dest/topology.ncols, dest%topology.ncols, 0,
 			size);
-		
-		if (fscanf(nasfilep, "%f %*u %*c %u %u %*c %u", &start,&source,&dest,&size) < 0)
-			error("io error");
 	}
 }
 
