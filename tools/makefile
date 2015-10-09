@@ -10,7 +10,7 @@ all: nas2tpz trace-packer trace-parser
 
 # Builds NPB to TOPAZ trace conversor.
 nas2tpz: nas2tpz.c
-	$(CC) $(CFLAGS) nas2tpz.c -o $(BINDIR)/nas2tpz
+	$(CC) $(CFLAGS) nas2tpz.c -o $(BINDIR)/nas2tpz $(LIBS)
 
 # Builds PIN trace packer.
 trace-packer: trace-packer.c
