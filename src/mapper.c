@@ -17,40 +17,40 @@
  * along with MyLib. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdarg.h>
+
 #include <mylib/list.h>
 #include <mylib/matrix.h>
 #include <mylib/vector.h>
+#include <mylib/ai.h>
+#include <mylib/util.h>
 
 #include "mapper.h"
 
 /**
- * @brief Processes.
- */
-list_t procs;
-
-/**
  * @brief Maps process.
  */
-void process_map(unsigned nprocs, matrix_t communication)
+int *process_map(unsigned nprocs, matrix_t communication, unsigned nclusters)
 {
-	procs = list_create(&process);
+	int *map;        /* Map.       */
+	vector_t *procs; /* Processes. */
 	
-/* Create processes. */
+	/* Create processes. */
+	procs = smalloc(nprocs*sizeof(vector_t));
 	for (unsigned i = 0; i < nprocs; i++)
 	{
-		vector_t traffic;
-		struct process *proc;
-		
-		traffic = vector_create(nprocs*nprocs);
+		procs[i] = vector_create(nprocs);
 		
 		for (unsigned j = 0; j < nprocs; j++)
-		{
-			vector_set(traffic, i*nprocs + j, matrix_get(communication, i, j));
-			vector_set(traffic, j*nprocs + i, matrix_get(communication, j, i));
-		}
-		
-		proc = process_create(i, traffic);
-		
-		list_insert(procs, proc);
+			vector_set(procs[i], j, matrix_get(communication, i, j));
 	}
+	
+	map = kmeans(procs, nprocs, nclusters, 0.0);
+	
+	/* House keeping. */
+	for (unsigned i = 0; i < nprocs; i++)
+		vector_destroy(procs[i]);
+	free(procs);
+	
+	return (map);
 }

@@ -70,7 +70,7 @@ static void readargs(int argc, char **argv)
 	
 	/* Parse command line parameters. */
 	state = STATE_READ_ARG;
-	for (int i = 0; i < argc; i++)
+	for (int i = 1; i < argc; i++)
 	{
 		char *arg = argv[i];
 		
@@ -142,7 +142,7 @@ static void chkargs(void)
 		error("cannot open topology file");
 	if (nprocs == 0)
 		error("invalid number of processes");
-	if ((flags & USE_KMEANS) && (nclusters == 0))
+	if (nclusters == 0)
 		error("invalid kmeans parameters");
 }
 
@@ -177,12 +177,23 @@ static matrix_t read_communication_matrix(FILE *input)
  */
 int main(int argc, char **argv)
 {
+	int *map;
+	matrix_t m;
+	
 	readargs(argc, argv);
 	chkargs();
 	
-	read_communication_matrix(communication);
+	m = read_communication_matrix(communication);
+	
+	map = process_map(nprocs, m, nclusters);
+	
+	/* Print map. */
+	for (unsigned i = 0; i < nprocs; i++)
+		printf("%3u %d\n", i, map[i]);
 	
 	/* House keeping. */
+	free(map);
+	matrix_destroy(m);
 	fclose(communication);
 	if (flags & USE_TOPOLOGY)
 		fclose(topology);

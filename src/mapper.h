@@ -20,35 +20,8 @@
 #ifndef MAPPER_H_
 #define MAPPER_H_
 
-	#include <mylib/list.h>
-	#include <mylib/object.h>
-	#include <mylib/vector.h>
+	#include <mylib/matrix.h>
 
-	/*========================================================================*
-	 *                          Process Interface                             *
-	 *========================================================================*/
-
-	/**
-	 * @brief Process.
-	 */
-	struct process
-	{
-		int id;           /**< Process ID.            */
-		vector_t traffic; /**< Communication traffic. */
-	};
-	
-	/* Forward definitions. */
-	extern struct process *process_create(int, vector_t);
-	extern void process_destroy(struct process *);
-	
-	/* Forward definitions. */
-	extern const struct objinfo process;
-
-	/*========================================================================*
-	 *                           Mapper Interface                             *
-	 *========================================================================*/
-	
-	/* Forward definition. */
-	extern list_t procs;
+	extern int *process_map(unsigned, matrix_t, unsigned);
 
 #endif /* MAPPER_H_ */
