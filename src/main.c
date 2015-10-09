@@ -132,6 +132,21 @@ static void readargs(int argc, char **argv)
 }
 
 /**
+ * @brief Checks program arguments.
+ */
+static void chkargs(void)
+{
+	if (communication == NULL)
+		error("cannot open communication file");
+	if ((flags & USE_TOPOLOGY) && (topology == NULL))
+		error("cannot open topology file");
+	if (nprocs == 0)
+		error("invalid number of processes");
+	if ((flags & USE_KMEANS) && (nclusters == 0))
+		error("invalid kmeans parameters");
+}
+
+/**
  * @brief Reads communication matrix.
  * 
  * @param file Target file.
@@ -163,6 +178,7 @@ static matrix_t read_communication_matrix(FILE *input)
 int main(int argc, char **argv)
 {
 	readargs(argc, argv);
+	chkargs();
 	
 	read_communication_matrix(communication);
 	
