@@ -22,6 +22,6 @@
 
 	#include <mylib/matrix.h>
 
-	extern int *process_map(unsigned, matrix_t, unsigned);
+	extern int *process_map(unsigned, matrix_t, unsigned, unsigned);
 
 #endif /* MAPPER_H_ */

@@ -133,14 +133,14 @@ static void destroy_centroids(vector_t *centroids, unsigned ncentroids)
 }
 
 /**
- * @brief Balances processes among clusters.
+ * @brief Balances processes among clusters using auction's algorithm.
  * 
  * @param procs     Processes.
  * @param nprocs    Number of processes.
  * @param centroids Centroids of clusters.
  * @param nclusters Number of clusters.
  */
-static int *balance
+static int *auction_balance
 (const vector_t *procs, unsigned nprocs, const vector_t *centroids, unsigned nclusters)
 {
 	int *map;   /* Process map.      */
@@ -181,13 +181,15 @@ static int *balance
 /**
  * @brief Maps processes using kmeans algorithm.
  *
- * @param procs     Processes.
- * @param nprocs    Number of processes.
- * @param nclusters Number of clusters.
+ * @param procs       Processes.
+ * @param nprocs      Number of processes.
+ * @param nclusters   Number of clusters.
+ * @param use_auction Use auction balancer?
  *
  * @returns A process map.
  */
-static int *map_kmeans(const vector_t *procs, unsigned nprocs, unsigned nclusters)
+static int *map_kmeans
+(const vector_t *procs, unsigned nprocs, unsigned nclusters, unsigned use_auction)
 {
 	int *map;            /* Process map.                  */
 	int *balanced_map;   /* Balanced process map.         */
@@ -202,14 +204,18 @@ static int *map_kmeans(const vector_t *procs, unsigned nprocs, unsigned ncluster
 	/* Print average distance. */
 	for (unsigned i = 0; i < nclusters; i++)
 		fprintf(stderr, "cluster %d: %lf\n", i, avg[i]);
+	fprintf(stderr, "\n");
 	
 	/* Balance. */
-	fprintf(stderr, "\n");
-	free(avg);
-	balanced_map = balance(procs, nprocs, centroids, nclusters);
-	destroy_centroids(centroids, nclusters);
-	centroids = compute_centroids(procs, nprocs, balanced_map, nclusters);
-	avg = compute_average_distance(procs, nprocs, centroids, nclusters, map);
+	if (use_auction)
+	{
+		free(avg);
+		balanced_map = auction_balance(procs, nprocs, centroids, nclusters);
+		destroy_centroids(centroids, nclusters);
+		centroids = compute_centroids(procs, nprocs, balanced_map, nclusters);
+		avg = compute_average_distance(procs, nprocs, centroids, nclusters, map);
+		map = balanced_map;
+	}
 	
 	/* Print average distance. */
 	for (unsigned i = 0; i < nclusters; i++)
@@ -219,9 +225,8 @@ static int *map_kmeans(const vector_t *procs, unsigned nprocs, unsigned ncluster
 	destroy_centroids(centroids, nclusters);
 	free(centroids);
 	free(avg);
-	free(map);
 
-	return (balanced_map);
+	return (map);
 }
 
 /*===========================================================================*
@@ -231,7 +236,7 @@ static int *map_kmeans(const vector_t *procs, unsigned nprocs, unsigned ncluster
 /**
  * @brief Maps process.
  */
-int *process_map(unsigned nprocs, matrix_t communication, unsigned nclusters)
+int *process_map(unsigned nprocs, matrix_t communication, unsigned nclusters, unsigned use_auction)
 {
 	int *map;        /* Map.       */
 	vector_t *procs; /* Processes. */
@@ -251,7 +256,7 @@ int *process_map(unsigned nprocs, matrix_t communication, unsigned nclusters)
 		}
 	}
 
-	map = map_kmeans(procs, nprocs, nclusters);
+	map = map_kmeans(procs, nprocs, nclusters, use_auction);
 
 	/* House keeping. */
 	for (unsigned i = 0; i < nprocs; i++)

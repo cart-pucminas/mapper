@@ -30,6 +30,7 @@
 #define USE_KMEANS        (1 << 0)
 #define USE_COMMUNICATION (1 << 1)
 #define USE_TOPOLOGY      (1 << 2)
+#define USE_AUCTION       (1 << 3)
 
 /* Program arguments. */
 static unsigned flags = 0;         /* Argument flags.       */
@@ -46,6 +47,7 @@ static void usage(void)
 	printf("Usage: mapper [options] --nprocs <num> --communication <filename>\n\n");
 	printf("Brief maps processes on a processor\n\n");
 	printf("Options:\n");
+	printf("    --auction-balance     use auction balance");
 	printf("    --kmeans <nclusters>  use kmeans strategy\n");
 	printf("    --topology <filename> topology file\n");
 	
@@ -60,10 +62,11 @@ static void readargs(int argc, char **argv)
 	/* Parsing states. */
 	enum parsing_states {
 		STATE_READ_ARG,         /* Read argument.           */
+		STATE_SET_AUCTION,      /* Set auction balance.     */
 		STATE_SET_KMEANS,       /* Set kmeans parameters.   */
 		STATE_SET_TOPOLOGY,     /* Set topology file.       */
 		STATE_SET_NPROCS,       /* Set number of processes. */
-		STATE_SET_COMMUNICATION /* Set communication file. */
+		STATE_SET_COMMUNICATION /* Set communication file.  */
 	};
 	
 	int state;
@@ -79,6 +82,11 @@ static void readargs(int argc, char **argv)
 		{
 			switch (state)
 			{
+				/* Set auction balance. */
+				case STATE_SET_AUCTION:
+					flags |= USE_AUCTION;
+					break;
+					
 				/* Set kmeans parameters. */
 				case STATE_SET_KMEANS:
 					flags |= USE_KMEANS;
@@ -120,6 +128,8 @@ static void readargs(int argc, char **argv)
 		/* Parse argument. */
 		if (!strcmp(arg, "--help"))
 			usage();
+		else if (!strcmp(arg, "--auction-balance"))
+			state = STATE_SET_AUCTION;
 		else if (!strcmp(arg, "--kmeans"))
 			state = STATE_SET_KMEANS;
 		else if(!strcmp(arg, "--topology"))
@@ -185,7 +195,7 @@ int main(int argc, char **argv)
 	
 	m = read_communication_matrix(communication);
 	
-	map = process_map(nprocs, m, nclusters);
+	map = process_map(nprocs, m, nclusters, flags & USE_AUCTION);
 	
 	/* Print map. */
 	for (unsigned i = 0; i < nprocs; i++)
