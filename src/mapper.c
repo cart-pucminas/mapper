@@ -18,6 +18,7 @@
  */
 
 #include <stdarg.h>
+#include <limits.h>
 
 #include <mylib/algorithms.h>
 #include <mylib/list.h>
@@ -130,6 +131,7 @@ static void destroy_centroids(vector_t *centroids, unsigned ncentroids)
 {
 	for (unsigned i = 0; i < ncentroids; i++)
 		vector_destroy(centroids[i]);
+	free(centroids);
 }
 
 /**
@@ -179,6 +181,88 @@ static int *auction_balance
 }
 
 /**
+ * @brief Balances processes among clusters using a greedy strategy
+ * 
+ * @param procs     Processes.
+ * @param nprocs    Number of processes.
+ * @param centroids Centroids of clusters.
+ * @param nclusters Number of clusters.
+ * @param map       Process map.
+ */
+static int *greedy_balance
+(const vector_t *procs, int nprocs, const vector_t *centroids, int nclusters, int *map)
+{
+	if (nprocs%nclusters)
+		error("invalid number of clusters");
+	
+	/* Balance. */
+	for (int i = 0; i < nclusters; i++)
+	{
+		int n1;       /* nprocs/nclusters  */
+		int farthest; /* Farthest process. */
+		
+		n1 = 0;
+		
+		/* Count number of processes in the cluster. */
+		for (int j = 0; j < nprocs; j++)
+		{
+			if (map[j] == i)
+				n1++;
+		}
+		
+		/* Take a processes out from this cluster. */
+		while (n1-- > (nprocs/nclusters))
+		{
+			int n2;
+			double d1, d2;
+			
+			/* Get farthest process. */
+			farthest = UINT_MAX;
+			for (int j = 0; j < nprocs; j++)
+			{
+				if (map[j] != i)
+					continue;
+				
+				if (farthest < 0)
+				{
+					farthest = j;
+					d1 = vector_distance(procs[farthest], centroids[i]);
+					continue;
+				}
+				
+				d2 = vector_distance(procs[j], centroids[i]);
+				
+				if (d2 > d1)
+				{
+					farthest = j;
+					d2 = d1;
+				}
+			}
+			
+			/* Get empty cluster. */
+			n2 = 0;
+			for (int j = 0; j < nclusters; j++)
+			{
+				for (int k = 0; k < nprocs; k++)
+				{
+					if (map[k] == j)
+						n2++;
+				}
+				
+				if (n2 < (nprocs/nclusters))
+				{
+					map[farthest] = j;
+					break;
+				}
+			}
+		}
+	}
+	
+	
+	return (map);
+}
+
+/**
  * @brief Maps processes using kmeans algorithm.
  *
  * @param procs       Processes.
@@ -207,15 +291,14 @@ static int *map_kmeans
 	fprintf(stderr, "\n");
 	
 	/* Balance. */
-	if (use_auction)
-	{
-		free(avg);
-		balanced_map = auction_balance(procs, nprocs, centroids, nclusters);
-		destroy_centroids(centroids, nclusters);
-		centroids = compute_centroids(procs, nprocs, balanced_map, nclusters);
-		avg = compute_average_distance(procs, nprocs, centroids, nclusters, map);
-		map = balanced_map;
-	}
+	free(avg);
+	balanced_map = (use_auction) ?
+		auction_balance(procs, nprocs, centroids, nclusters) :
+		greedy_balance(procs, nprocs, centroids, nclusters, map);			
+	destroy_centroids(centroids, nclusters);
+	centroids = compute_centroids(procs, nprocs, balanced_map, nclusters);
+	avg = compute_average_distance(procs, nprocs, centroids, nclusters, balanced_map);
+	map = balanced_map;
 	
 	/* Print average distance. */
 	for (unsigned i = 0; i < nclusters; i++)
@@ -223,10 +306,9 @@ static int *map_kmeans
 
 	/* House keeping. */
 	destroy_centroids(centroids, nclusters);
-	free(centroids);
 	free(avg);
-
-	return (map);
+	
+	return (balanced_map);
 }
 
 /*===========================================================================*

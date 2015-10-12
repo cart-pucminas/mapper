@@ -207,5 +207,6 @@ int main(int argc, char **argv)
 	fclose(communication);
 	if (flags & USE_TOPOLOGY)
 		fclose(topology);
+	
 	return (0);
 }
