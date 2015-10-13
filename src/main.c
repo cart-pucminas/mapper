@@ -189,13 +189,17 @@ int main(int argc, char **argv)
 {
 	int *map;
 	matrix_t m;
+	struct kmeans_args args;
 	
 	readargs(argc, argv);
 	chkargs();
 	
 	m = read_communication_matrix(communication);
 	
-	map = process_map(m, STRATEGY_KMEANS, nclusters, flags & USE_AUCTION);
+	args.use_auction = flags & USE_AUCTION;
+	args.nclusters = nclusters;
+	
+	map = process_map(m, STRATEGY_KMEANS, &args);
 	
 	/* Print map. */
 	for (unsigned i = 0; i < nprocs; i++)

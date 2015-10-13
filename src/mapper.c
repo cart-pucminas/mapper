@@ -18,7 +18,6 @@
  */
 
 #include <assert.h>
-#include <stdarg.h>
 #include <limits.h>
 
 #include <mylib/algorithms.h>
@@ -29,6 +28,7 @@
 #include <mylib/util.h>
 
 #include "mapper.h"
+
 
 /*========================================================================*
  *                             Kmeans Strategy                            *
@@ -173,12 +173,21 @@ static int *greedy_balance
  * @returns A process map.
  */
 static int *map_kmeans
-(const vector_t *procs, unsigned nprocs, unsigned nclusters, unsigned use_auction)
+(const vector_t *procs, unsigned nprocs, void *args)
 {
-	int *map;            /* Process map.                  */
-	int *balanced_map;   /* Balanced process map.         */
-	double *avg;         /* Average distance in clusters. */
-	vector_t *centroids; /* Centroids.                    */
+	int *map;             /* Process map.                  */
+	unsigned use_auction; /* Use auction balancing?        */
+	unsigned nclusters;   /* Number of clusters.           */
+	int *balanced_map;    /* Balanced process map.         */
+	double *avg;          /* Average distance in clusters. */
+	vector_t *centroids;  /* Centroids.                    */
+	
+	/* Extract arguments. */
+	nclusters = ((struct kmeans_args *)args)->nclusters;
+	use_auction = ((struct kmeans_args *)args)->use_auction;
+	
+	/* Sanity check. */
+	assert(nclusters > 0);
 	
 	map = kmeans(procs, nprocs, nclusters, 0.0);
 
@@ -218,22 +227,36 @@ static int *map_kmeans
  *===========================================================================*/
 
 /**
+ * @brief Number of mapping strategies.
+ */
+#define NR_STRATEGIES 1
+
+/**
+ * @brief Mapping strategy.
+ */
+typedef int *(*strategy)(const vector_t *, unsigned, void *);
+
+/**
+ * @brief Mapping strategies.
+ */
+static strategy strategies[NR_STRATEGIES] =  {
+	map_kmeans
+};
+
+/**
  * @brief Maps process.
  */
-int *process_map(matrix_t communication, unsigned strategy, ...)
+int *process_map(matrix_t communication, unsigned strategy, void *args)
 {
-	int *map;           /* Map.                 */
-	va_list args;       /* Arguments.           */
-	unsigned nprocs;    /* Number of processes. */
-	unsigned flags;     /* Strategy flags.            */
-	unsigned nclusters; /* Number of kmeans clusters. */
-	vector_t *procs;    /* Processes.                 */
+	int *map;        /* Map.                 */
+	unsigned nprocs; /* Number of processes. */
+	vector_t *procs; /* Processes.           */
 	
 	/* Sanity check. */
 	assert(communication != NULL);
 	assert(matrix_height(communication) == matrix_width(communication));
-	
-	va_start(args, strategy);
+	assert(strategy < NR_STRATEGIES);
+	assert(args != NULL);
 	
 	nprocs = matrix_height(communication);
 	
@@ -252,25 +275,9 @@ int *process_map(matrix_t communication, unsigned strategy, ...)
 		}
 	}
 
-	/* Run mapping strategy. */
-	map = NULL;
-	switch (strategy)
-	{
-		/* Kmeans strategy. */
-		case STRATEGY_KMEANS:
-			nclusters = va_arg(args, unsigned);
-			flags = va_arg(args, unsigned);
-			map = map_kmeans(procs, nprocs, nclusters, flags);
-			break;
-			
-		/* Unknown strategy. */
-		default:
-			warning("unknown mapping strategy");
-			break;
-	}
+	map = strategies[strategy](procs, nprocs, args);
 
 	/* House keeping. */
-	va_end(args);
 	for (unsigned i = 0; i < nprocs; i++)
 		vector_destroy(procs[i]);
 	free(procs);

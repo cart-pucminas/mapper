@@ -23,12 +23,21 @@
 	#include <mylib/matrix.h>
 	
 	/**
+	 * @brief Kmeans strategy arguments.
+	 */
+	struct kmeans_args
+	{
+		unsigned use_auction : 1; /**< Use auction?        */
+		unsigned nclusters;       /**< Number of clusters. */
+	};
+	
+	/**
 	 * @brief Mapping strategies.
 	 */
 	/**@{*/
-	#define STRATEGY_KMEANS 1 /**< Kmeans strategy. */
+	#define STRATEGY_KMEANS 0 /**< Kmeans strategy. */
 	/**@}*/
 
-	extern int *process_map(matrix_t, unsigned, ...);
+	extern int *process_map(matrix_t, unsigned, void *);
 
 #endif /* MAPPER_H_ */
