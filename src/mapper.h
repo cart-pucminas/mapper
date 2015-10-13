@@ -21,7 +21,14 @@
 #define MAPPER_H_
 
 	#include <mylib/matrix.h>
+	
+	/**
+	 * @brief Mapping strategies.
+	 */
+	/**@{*/
+	#define STRATEGY_KMEANS 1 /**< Kmeans strategy. */
+	/**@}*/
 
-	extern int *process_map(unsigned, matrix_t, unsigned, unsigned);
+	extern int *process_map(matrix_t, unsigned, ...);
 
 #endif /* MAPPER_H_ */

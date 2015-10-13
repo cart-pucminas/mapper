@@ -17,6 +17,7 @@
  * along with MyLib. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <stdarg.h>
 #include <limits.h>
 
@@ -178,7 +179,7 @@ static int *map_kmeans
 	int *balanced_map;   /* Balanced process map.         */
 	double *avg;         /* Average distance in clusters. */
 	vector_t *centroids; /* Centroids.                    */
-
+	
 	map = kmeans(procs, nprocs, nclusters, 0.0);
 
 	centroids = kmeans_centroids(procs, nprocs, map);
@@ -219,10 +220,22 @@ static int *map_kmeans
 /**
  * @brief Maps process.
  */
-int *process_map(unsigned nprocs, matrix_t communication, unsigned nclusters, unsigned use_auction)
+int *process_map(matrix_t communication, unsigned strategy, ...)
 {
-	int *map;        /* Map.       */
-	vector_t *procs; /* Processes. */
+	int *map;           /* Map.                 */
+	va_list args;       /* Arguments.           */
+	unsigned nprocs;    /* Number of processes. */
+	unsigned flags;     /* Strategy flags.            */
+	unsigned nclusters; /* Number of kmeans clusters. */
+	vector_t *procs;    /* Processes.                 */
+	
+	/* Sanity check. */
+	assert(communication != NULL);
+	assert(matrix_height(communication) == matrix_width(communication));
+	
+	va_start(args, strategy);
+	
+	nprocs = matrix_height(communication);
 	
 	/* Create processes. */
 	procs = smalloc(nprocs*sizeof(vector_t));
@@ -239,9 +252,25 @@ int *process_map(unsigned nprocs, matrix_t communication, unsigned nclusters, un
 		}
 	}
 
-	map = map_kmeans(procs, nprocs, nclusters, use_auction);
+	/* Run mapping strategy. */
+	map = NULL;
+	switch (strategy)
+	{
+		/* Kmeans strategy. */
+		case STRATEGY_KMEANS:
+			nclusters = va_arg(args, unsigned);
+			flags = va_arg(args, unsigned);
+			map = map_kmeans(procs, nprocs, nclusters, flags);
+			break;
+			
+		/* Unknown strategy. */
+		default:
+			warning("unknown mapping strategy");
+			break;
+	}
 
 	/* House keeping. */
+	va_end(args);
 	for (unsigned i = 0; i < nprocs; i++)
 		vector_destroy(procs[i]);
 	free(procs);

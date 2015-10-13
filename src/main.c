@@ -195,7 +195,7 @@ int main(int argc, char **argv)
 	
 	m = read_communication_matrix(communication);
 	
-	map = process_map(nprocs, m, nclusters, flags & USE_AUCTION);
+	map = process_map(m, STRATEGY_KMEANS, nclusters, flags & USE_AUCTION);
 	
 	/* Print map. */
 	for (unsigned i = 0; i < nprocs; i++)
