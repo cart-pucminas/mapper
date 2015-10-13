@@ -106,24 +106,23 @@ static int *auction_balance
  * @param nclusters Number of clusters.
  * @param map       Process map.
  */
-static int *greedy_balance
+static void greedy_balance
 (const vector_t *procs, int nprocs, const vector_t *centroids, int nclusters, int *map)
 {
+	const int procs_per_cluster = nprocs/nclusters;
+	
 	if (nprocs%nclusters)
 		error("invalid number of clusters");
 	
 	/* Balance. */
 	for (int i = 0; i < nclusters; i++)
 	{
-		int n1;       /* nprocs/nclusters  */
-		int farthest; /* Farthest process. */
-		
-		n1 = kmeans_count(map, nprocs, i);
+		int n1 = kmeans_count(map, nprocs, i);
 		
 		/* Take a processes out from this cluster. */
-		while (n1-- > (nprocs/nclusters))
+		while (n1-- > procs_per_cluster)
 		{
-			int n2;
+			int farthest;
 			double d1, d2;
 			
 			/* Get farthest process. */
@@ -135,34 +134,24 @@ static int *greedy_balance
 				
 				if (farthest < 0)
 				{
-					farthest = j;
-					d1 = vector_distance(procs[farthest], centroids[i]);
+					d1 = vector_distance(procs[farthest = j], centroids[i]);
 					continue;
 				}
 				
-				d2 = vector_distance(procs[j], centroids[i]);
-				
-				if (d2 > d1)
-				{
-					farthest = j;
-					d2 = d1;
-				}
+				if ((d2 = vector_distance(procs[j], centroids[i])) > d1)
+					farthest = j, d2 = d1;
 			}
 			
-			/* Get empty cluster. */
+			/* Get not crowded cluster. */
 			for (int j = 0; j < nclusters; j++)
 			{
-				n2 = kmeans_count(map, nprocs, j);
-				if (n2 < (nprocs/nclusters))
-				{
-					map[farthest] = j;
-					break;
-				}
+				if ((kmeans_count(map, nprocs, j)) >= procs_per_cluster)
+					continue;
+				
+				map[farthest] = j;
 			}
 		}
 	}
-	
-	return (map);
 }
 
 /**
