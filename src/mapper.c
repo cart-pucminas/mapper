@@ -158,7 +158,6 @@ static int *greedy_balance
 		}
 	}
 	
-	
 	return (map);
 }
 
@@ -192,15 +191,8 @@ static int *map_kmeans
 	map = kmeans(procs, nprocs, nclusters, 0.0);
 
 	centroids = kmeans_centroids(procs, nprocs, map);
-	avg = kmeans_average_distance(procs, nprocs, centroids, nclusters, map);
-	
-	/* Print average distance. */
-	for (unsigned i = 0; i < nclusters; i++)
-		fprintf(stderr, "cluster %d: %.10lf\n", i, avg[i]);
-	fprintf(stderr, "\n");
 	
 	/* Balance. */
-	free(avg);
 	balanced_map = (use_auction) ?
 		auction_balance(procs, nprocs, centroids, nclusters) :
 		greedy_balance(procs, nprocs, centroids, nclusters, map);			
@@ -212,8 +204,12 @@ static int *map_kmeans
 	map = balanced_map;
 	
 	/* Print average distance. */
-	for (unsigned i = 0; i < nclusters; i++)
-		fprintf(stderr, "cluster %d: %.10lf\n", i, avg[i]);
+	if (verbose)
+	{
+		for (unsigned i = 0; i < nclusters; i++)
+			printf("cluster %d: %.10lf\n", i, avg[i]);
+		printf("\n");
+	}
 
 	/* House keeping. */
 	destroy_centroids(centroids, nclusters);
@@ -265,13 +261,11 @@ int *process_map(matrix_t communication, unsigned strategy, void *args)
 	for (unsigned i = 0; i < nprocs; i++)
 	{
 		procs[i] = vector_create(nprocs);
-		
 		for (unsigned j = 0; j < nprocs; j++)
 		{
 			double a;
-			
-			vector_set(procs[i], j, 
-					((a = matrix_get(communication, i, j)) > 0) ? 1.0/a : a);
+			a = matrix_get(communication, i, j);
+			vector_set(procs[i], j, (a > 0) ? 1.0/a : a);
 		}
 	}
 

@@ -20,6 +20,8 @@
 #ifndef MAPPER_H_
 #define MAPPER_H_
 
+	#include <stdbool.h>
+
 	#include <mylib/matrix.h>
 	
 	/**
@@ -38,6 +40,10 @@
 	#define STRATEGY_KMEANS 0 /**< Kmeans strategy. */
 	/**@}*/
 
+	/* Forward definitions. */
 	extern int *process_map(matrix_t, unsigned, void *);
+	
+	/* Forward definitions. */
+	extern bool verbose;
 
 #endif /* MAPPER_H_ */
