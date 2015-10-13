@@ -47,6 +47,8 @@ static void destroy_centroids(vector_t *centroids, unsigned ncentroids)
 	free(centroids);
 }
 
+#ifdef XXX
+
 /**
  * @brief Balances processes among clusters using auction's algorithm.
  * 
@@ -92,6 +94,8 @@ static int *auction_balance
 	
 	return (map);
 }
+
+#endif
 
 /**
  * @brief Balances processes among clusters using a greedy strategy
@@ -177,9 +181,10 @@ static int *map_kmeans
 	int *map;             /* Process map.                  */
 	unsigned use_auction; /* Use auction balancing?        */
 	unsigned nclusters;   /* Number of clusters.           */
-	int *balanced_map;    /* Balanced process map.         */
 	double *avg;          /* Average distance in clusters. */
 	vector_t *centroids;  /* Centroids.                    */
+	
+	UNUSED(use_auction);
 	
 	/* Extract arguments. */
 	nclusters = ((struct kmeans_args *)args)->nclusters;
@@ -189,33 +194,27 @@ static int *map_kmeans
 	assert(nclusters > 0);
 	
 	map = kmeans(procs, nprocs, nclusters, 0.0);
-
-	centroids = kmeans_centroids(procs, nprocs, map);
 	
 	/* Balance. */
-	balanced_map = (use_auction) ?
-		auction_balance(procs, nprocs, centroids, nclusters) :
-		greedy_balance(procs, nprocs, centroids, nclusters, map);			
-	destroy_centroids(centroids, nclusters);
-	centroids = kmeans_centroids(procs, nprocs, balanced_map);
-	avg = kmeans_average_distance(procs, nprocs, centroids, nclusters, balanced_map);
-	if (use_auction)
-		free(map);
-	map = balanced_map;
+	centroids = kmeans_centroids(procs, nprocs, map);
+	greedy_balance(procs, nprocs, centroids, nclusters, map);
 	
 	/* Print average distance. */
 	if (verbose)
 	{
+		destroy_centroids(centroids, nclusters);
+		centroids = kmeans_centroids(procs, nprocs, map);
+		avg = kmeans_average_distance(procs, nprocs, centroids, nclusters, map);
 		for (unsigned i = 0; i < nclusters; i++)
-			printf("cluster %d: %.10lf\n", i, avg[i]);
-		printf("\n");
+			fprintf(stderr, "cluster %d: %.10lf\n", i, avg[i]);
+		fprintf(stderr, "\n");
+		free(avg);
 	}
 
 	/* House keeping. */
 	destroy_centroids(centroids, nclusters);
-	free(avg);
 	
-	return (balanced_map);
+	return (map);
 }
 
 /*===========================================================================*
