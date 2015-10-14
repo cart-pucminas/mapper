@@ -34,29 +34,31 @@
 /**@{*/
 #define USE_KMEANS        (1 << 0)
 #define USE_COMMUNICATION (1 << 1)
-#define USE_TOPOLOGY      (1 << 2)
-#define USE_AUCTION       (1 << 3)
+#define USE_AUCTION       (1 << 2)
 /**@}*/
 
 /* Program arguments. */
-static unsigned flags = 0;         /* Argument flags.       */
-static FILE *communication = NULL; /* Communication matrix. */
-static FILE *topology = NULL;      /* Topology filename.    */
-static unsigned nprocs = 0;        /* Number of processes.  */
-static unsigned nclusters = 0;     /* Number of clusters.   */
-bool verbose = false;              /* Be verbose.           */
+static unsigned flags = 0;            /* Argument flags.       */
+static FILE *communication = NULL;    /* Communication matrix. */
+static unsigned nclusters = 0;        /* Number of clusters.   */
+static struct topology mesh = {0, 0}; /* Processor's topology. */
+bool verbose = false;                 /* Be verbose.           */
+
+/**
+ * @brief Number of processes.
+ */
+static unsigned nprocs = 0;
 
 /**
  * @brief Prints program usage and exits.
  */
 static void usage(void)
 {
-	printf("Usage: mapper [options] --nprocs <num> --communication <filename>\n\n");
+	printf("Usage: mapper [options] --topology <height x width> --communication <filename>\n\n");
 	printf("Brief maps processes on a processor\n\n");
 	printf("Options:\n");
 	printf("    --auction-balance     use auction balance");
 	printf("    --kmeans <nclusters>  use kmeans strategy\n");
-	printf("    --topology <filename> topology file\n");
 	printf("    --verbose             be verbose\n");
 	
 	exit(EXIT_SUCCESS);
@@ -69,12 +71,11 @@ static void readargs(int argc, char **argv)
 {
 	/* Parsing states. */
 	enum parsing_states {
-		STATE_READ_ARG,         /* Read argument.           */
-		STATE_SET_AUCTION,      /* Set auction balance.     */
-		STATE_SET_KMEANS,       /* Set kmeans parameters.   */
-		STATE_SET_TOPOLOGY,     /* Set topology file.       */
-		STATE_SET_NPROCS,       /* Set number of processes. */
-		STATE_SET_COMMUNICATION /* Set communication file.  */
+		STATE_READ_ARG,         /* Read argument.          */
+		STATE_SET_AUCTION,      /* Set auction balance.    */
+		STATE_SET_KMEANS,       /* Set kmeans parameters.  */
+		STATE_SET_TOPOLOGY,     /* Set topology file.      */
+		STATE_SET_COMMUNICATION /* Set communication file. */
 	};
 	
 	int state;
@@ -103,16 +104,7 @@ static void readargs(int argc, char **argv)
 					
 				/* Set topology file. */
 				case STATE_SET_TOPOLOGY:
-					flags |= USE_TOPOLOGY;
-					if (topology != NULL)
-						topology = freopen(arg, "r", topology);
-					else
-						topology = fopen(arg, "r");
-					break;
-				
-				/* Set number of processes. */
-				case STATE_SET_NPROCS:
-					nprocs = atoi(arg);
+					sscanf(arg, "%u%*c%u", &mesh.height, &mesh.width);
 					break;
 				
 				/* Set communication files. */
@@ -142,8 +134,6 @@ static void readargs(int argc, char **argv)
 			state = STATE_SET_KMEANS;
 		else if(!strcmp(arg, "--topology"))
 			state = STATE_SET_TOPOLOGY;
-		else if (!strcmp(arg, "--nprocs"))
-			state = STATE_SET_NPROCS;
 		else if (!strcmp(arg, "--communication"))
 			state = STATE_SET_COMMUNICATION;
 		else if (!strcmp(arg, "--verbose"))
@@ -158,11 +148,9 @@ static void chkargs(void)
 {
 	if (communication == NULL)
 		error("cannot open communication file");
-	if ((flags & USE_TOPOLOGY) && (topology == NULL))
-		error("cannot open topology file");
-	if (nprocs == 0)
-		error("invalid number of processes");
-	if (nclusters == 0)
+	if ((mesh.height == 0) || (mesh.width == 0))
+		error("bad processor's topology");
+	if ((flags & USE_KMEANS) && (nclusters == 0))
 		error("invalid kmeans parameters");
 }
 
@@ -204,6 +192,8 @@ int main(int argc, char **argv)
 	readargs(argc, argv);
 	chkargs();
 	
+	nprocs = mesh.height*mesh.width;
+	
 	m = read_communication_matrix(communication);
 	
 	/* Build strategy arguments. */
@@ -220,8 +210,6 @@ int main(int argc, char **argv)
 	free(map);
 	matrix_destroy(m);
 	fclose(communication);
-	if (flags & USE_TOPOLOGY)
-		fclose(topology);
 	
 	return (0);
 }

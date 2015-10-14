@@ -25,6 +25,15 @@
 	#include <mylib/matrix.h>
 	
 	/**
+	 * @brief Processor's topology.
+	 */
+	struct topology
+	{
+		unsigned height; /**< Mesh height. */
+		unsigned width;  /**< Mesh width.  */
+	};
+	
+	/**
 	 * @brief Kmeans strategy arguments.
 	 */
 	struct kmeans_args
