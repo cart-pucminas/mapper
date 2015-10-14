@@ -19,6 +19,7 @@
 
 #include <limits.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <mylib/algorithms.h>
 #include <mylib/matrix.h>

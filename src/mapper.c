@@ -19,6 +19,7 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <stdlib.h>
 
 #include <mylib/matrix.h>
 #include <mylib/vector.h>
