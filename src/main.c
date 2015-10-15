@@ -40,14 +40,14 @@
 /* Program arguments. */
 static unsigned flags = 0;            /* Argument flags.       */
 static FILE *communication = NULL;    /* Communication matrix. */
-static unsigned nclusters = 0;        /* Number of clusters.   */
+static int nclusters = 0;             /* Number of clusters.   */
 static struct topology mesh = {0, 0}; /* Processor's topology. */
 bool verbose = false;                 /* Be verbose.           */
 
 /**
  * @brief Number of processes.
  */
-static unsigned nprocs = 0;
+static int nprocs = 0;
 
 /**
  * @brief Prints program usage and exits.
@@ -57,7 +57,7 @@ static void usage(void)
 	printf("Usage: mapper [options] --topology <height x width> --communication <filename>\n\n");
 	printf("Brief maps processes on a processor\n\n");
 	printf("Options:\n");
-	printf("    --auction-balance     use auction balance");
+	printf("    --auction-balance     use auction balance\n");
 	printf("    --kmeans <nclusters>  use kmeans strategy\n");
 	printf("    --verbose             be verbose\n");
 	
@@ -164,14 +164,14 @@ static void chkargs(void)
 static matrix_t read_communication_matrix(FILE *input)
 {
 	matrix_t m;         /* Communication matrix.        */
-	unsigned size;      /* Size of communication.       */
-	unsigned src, dest; /* Source and target processes. */
+	int size;      /* Size of communication.       */
+	int src, dest; /* Source and target processes. */
 	
 	m = matrix_create(nprocs, nprocs);
 	
 	/* Read communication matrix. */
 	fseek(input, 0, SEEK_SET);
-	while (fscanf(input, "%u %u %u\n", &src, &dest, &size) != EOF)
+	while (fscanf(input, "%d %d %d\n", &src, &dest, &size) != EOF)
 	{
 		matrix_set(m, dest, src, matrix_get(m, dest, src) + size);
 		matrix_set(m, src, dest, matrix_get(m, src, dest) + size);
@@ -190,7 +190,7 @@ static matrix_t read_communication_matrix(FILE *input)
  * 
  * @returns Process map fitness.
  */
-static double evaluate(int *map, unsigned nprocs, matrix_t traffic, struct topology *mesh)
+static double evaluate(int *map, int nprocs, matrix_t traffic, struct topology *mesh)
 {
 	double fitness;
 	
@@ -201,9 +201,9 @@ static double evaluate(int *map, unsigned nprocs, matrix_t traffic, struct topol
 	
 	/* Evaluate map. */
 	fitness = 0.0;
-	for (unsigned i = 0; i < nprocs; i++)
+	for (int i = 0; i < nprocs; i++)
 	{
-		for (unsigned j = 0; j < nprocs; j++)
+		for (int j = 0; j < nprocs; j++)
 		{
 			int distance;
 			
@@ -249,7 +249,7 @@ int main(int argc, char **argv)
 	map = process_map(m, STRATEGY_KMEANS, &args);
 	
 	/* Print map. */
-	for (unsigned i = 0; i < nprocs; i++)
+	for (int i = 0; i < nprocs; i++)
 		printf("%3u %d\n", i, map[i]);
 	if (verbose)
 		fprintf(stderr, "fitness: %lf\n", evaluate(map, nprocs, m, &mesh));
