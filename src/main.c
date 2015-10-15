@@ -180,8 +180,53 @@ static matrix_t read_communication_matrix(FILE *input)
 	return (m);
 }
 
+/**
+ * @brief Evaluates how good a process map is.
+ * 
+ * @param map     Process map.
+ * @param nprocs  Number of processes.
+ * @param traffic Communication matrix.
+ * @param mesh    Processor's topology.
+ * 
+ * @returns Process map fitness.
+ */
+static double evaluate(int *map, unsigned nprocs, matrix_t traffic, struct topology *mesh)
+{
+	double fitness;
+	
+	/* Sanity check. */
+	assert(map != NULL);
+	assert(nprocs > 0);
+	assert(traffic != NULL);
+	
+	/* Evaluate map. */
+	fitness = 0.0;
+	for (unsigned i = 0; i < nprocs; i++)
+	{
+		for (unsigned j = 0; j < nprocs; j++)
+		{
+			int distance;
+			
+			/* Skip this process. */
+			if (j == i)
+				continue;
+		
+			distance = (map[i]/mesh->width > map[j]/mesh->width) ?
+						map[i]/mesh->width - map[j]/mesh->width :
+						map[j]/mesh->width - map[i]/mesh->width +
+					   (map[i]%mesh->width > map[j]%mesh->width) ?
+					    map[i]%mesh->width - map[j]%mesh->width :
+					    map[j]%mesh->width - map[i]%mesh->width;
+					    
+			fitness += distance*matrix_get(traffic, i, j);
+		}
+	}
+	
+	return (fitness/(nprocs*nprocs));
+}
+
 /*
- * Mapps processes in a NoC
+ * Maps processes in a NoC
  */
 int main(int argc, char **argv)
 {
@@ -206,6 +251,8 @@ int main(int argc, char **argv)
 	/* Print map. */
 	for (unsigned i = 0; i < nprocs; i++)
 		printf("%3u %d\n", i, map[i]);
+	if (verbose)
+		fprintf(stderr, "fitness: %lf\n", evaluate(map, nprocs, m, &mesh));
 	
 	/* House keeping. */
 	free(map);
