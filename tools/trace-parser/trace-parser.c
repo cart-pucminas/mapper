@@ -26,9 +26,6 @@
 #include "access.h"
 
 
-
-
-
  void trace_read(struct cache *c, FILE * trace, int th){
 	
 	char rw;
@@ -41,29 +38,39 @@
 	int y;
 	
 	struct access *accessMem;
+
 	
 	while( (fscanf(trace,"%s", line))!=EOF ){
 				
 			sscanf(line, "%c%c%d%c%" PRIx64 "%*d", &rw, &ponto1, &size, &ponto2, &addr);	
 	
-			printf("\n rw = %c\n", rw);
-			printf("\n size = %d\n", size);
-			printf("\n addr = %" PRIx64 "\n", addr);
+
+			if (rw != 'R' && rw != 'W') //Não faz nada se não for leitura e escrita
+				continue;
 			
 			uint64_t x;
 			for( x = addr; x < (addr+size); x++ ){
 		
 				//Buscar o access do addr lido na cache
+				if (sizeof(key_t) < sizeof(uint64_t)){
+					printf ("uint64_t= %u \n key_t= %u \n", sizeof(uint64_t), sizeof(key_t));
+					error("Mapeamento de variáveis de tamanhos diferentes");
+				}
 				accessMem = (struct access*) cache_get(c, x);
 				
+								
 				if (accessMem !=NULL){
+
 					//Acrescentar o acesso lido 
 					if (rw == 'W')
 						accessMem->access[th] += 2;
 					else
 						accessMem->access[th] += 1;
+					
 					//Atualizar a cache
+					//fprintf(stderr, "\nAtualizar acesso na cache\n");
 					cache_update(c, accessMem);
+
 				}else{
 					//Criar um novo access
 					accessMem = access_create();
@@ -77,15 +84,19 @@
 						accessMem->access[th] += 2;
 					else
 						accessMem->access[th] += 1;
-					
 					//Inserir na cache
+					if (sizeof(key_t) < sizeof(uint64_t)){
+						printf ("uint64_t= %u \n key_t= %u \n", sizeof(uint64_t), sizeof(key_t));
+						error("Mapeamento de variáveis de tamanhos diferentes");
+					}
+					//fprintf(stderr, "\nInserir acesso na cache\n");
 					cache_insert(c, accessMem);
 				}
 			}
-		}
+			
+		}//Fim while
 	
 }
-
 
 
 void matrix_generate(FILE *swp, struct matrix *m){
@@ -98,12 +109,14 @@ void matrix_generate(FILE *swp, struct matrix *m){
 	
 	struct access *a;
 	a = smalloc(sizeof(struct access));
-
+		
 	while(!feof(swp)){
+
 		//Ler acessos gravados na swap
 		a = access_read(swp);
+
 		if (a==NULL){
-				printf("Erro ao ler o acesso do arquivo");
+				fprintf(stderr,"\nErro ao ler o acesso do arquivo\n");
 				break;
 		}
 
@@ -115,17 +128,17 @@ void matrix_generate(FILE *swp, struct matrix *m){
 					//Obter a quantidade de bytes compartilhados pelas
 					//threads X, Y até o momento
 					e = matrix_get(m, x, y);
-					
 					if (a->access[x] <= a->access[y])
 						e += a->access[x];
 					else
 						e += a->access[y];	
-						
+					
 					matrix_set(m, x, y, e);	
 				
 				}			
 			}
 		}
 	}
+	
 	
 }

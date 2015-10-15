@@ -34,5 +34,7 @@
 extern void trace_read(struct cache *, FILE *, int);
 extern void matrix_generate(FILE *, struct matrix *);
 
+extern void cache_update2(struct cache *, object_t);
+
 
 #endif /* TRACE-PARSER_H_ */

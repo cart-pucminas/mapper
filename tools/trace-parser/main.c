@@ -33,34 +33,42 @@
 
 int main(int argc, char **argv)
 {
-	unsigned size_cache = 256;
+	
+	unsigned size_cache = 65789;
 	int x, y;
 	char name_trace[80];
 	
 	//Abrir arquivo de swap para gravação e leitura
 	FILE * swp;
-	swp = fopen("swap.swp", "w+");
 	
+	//swp = fopen("~/teste-mapper/MG-W/saidas/swap.swp", "w+");
+	swp = fopen("/home/amanda/teste-mapper-reduzido/MG-W/saidas/swap.swp", "w+");
+
 	if(swp == NULL){
 		printf("Arquivo de swp não pode ser aberto");
 		return(EXIT_FAILURE);
 	}
+
 	
 	//Criar a Cache
 	struct cache * c = cache_create( &access_info, swp, size_cache);
 
+	printf("\nCache criada\n");
+	
 	FILE * trace;
 	//Ler todos os traces e armazenar os acessos na cache
 	for(x=0; x<QTD_THREADS; x++){
 		
-		sprintf(name_trace,"saida-%d.out", x);
+		//sprintf(name_trace,"~/teste-mapper/MG-W/out.tid%d.mem.out", x);
+		sprintf(name_trace,"/home/amanda/teste-mapper-reduzido/MG-W/out.tid%d.mem.out", x);
 		trace = fopen(name_trace, "r");
 		if(trace == NULL){
-			printf("Arquivo de trace não pode ser aberto");
+			fprintf(stderr, "\nArquivo de trace não pode ser aberto\n");
 			return(EXIT_FAILURE);
 		}
 		
 		//Ler o trace gravar na cache
+		printf("\nLendo o trace: %s\n", name_trace);
 		trace_read(c, trace, x);
 		
 		//Fechar arquivo de trace
@@ -68,45 +76,51 @@ int main(int argc, char **argv)
 	}
 	
 	//Descarregar toda a cache no arquivo de swap
+	fprintf(stderr,"\nCache flush\n");
 	cache_flush(c);	
-	
+
 	//Ferchar arquivo de swap
-	fclose(swp);
+	//fclose(swp);
 	
 	//Abrir arquivo de swap para leitura 
-	swp = fopen("swap.swp", "r");
+	//swp = fopen("~/teste-mapper/MG-W/saidas/swap.swp", "r");
+	//swp = fopen("/home/amamda/teste-mapper-reduzido/MG-W/saidas/swap.swp", "r");
 	
-	
-	
+	fprintf(stderr,"\nColocar ponteiro do arquivo de swap no início\n");
+	fseek(swp, 0, SEEK_SET); 
+
 	//Criar matriz de compatilhamento
 	struct matrix * m = matrix_create(QTD_THREADS, QTD_THREADS);
 	
+
 	//Gravar os acessos da swap na matriz de comparitlhamento 
 	matrix_generate(swp, m);
 	
+
 	//Fechar arquivo de swap
 	fclose(swp);
 	
 	//Gravar a matrix de compartilhamento em um arquivo
 	FILE * matrix_shared; 
-	matrix_shared = fopen("matrix-shared.out", "w");
+	//matrix_shared = fopen("~/teste-mapper/MG-W/saidas/matrix-shared.out", "w");
+	matrix_shared = fopen("/home/amanda/teste-mapper-reduzido/MG-W/saidas/matrix-shared.out", "w");
+	
 	if(matrix_shared == NULL){
-		printf("Arquivo para gravação da matrix não pode ser aberto");
+		fprintf(stderr, "\nArquivo para gravação da matrix não pode ser aberto\n");
 		return(EXIT_FAILURE);
 	}
 	
 	for(x=0; x<QTD_THREADS; x++){
-		for(y=0; y<QTD_THREADS; x++){
+		for(y=0; y<QTD_THREADS; y++){
+			//fprintf(stderr,"\nx=%d y=%d\n", x, y);
 			fprintf(matrix_shared, "%d;%d;%d\n", x, y, matrix_get(m, x, y));	
-				
 				
 		}
 	}
 	
 	
-	
 	fclose(matrix_shared);
-	
+		
 	return (EXIT_SUCCESS);
 }
 

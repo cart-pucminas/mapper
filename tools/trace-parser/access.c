@@ -84,12 +84,15 @@ const struct objinfo access_info = {
  */
 extern object_t access_read(FILE *file)
 {
+	//fprintf(stderr,"\nREAD1\n");
 	void *p;
 	
 	p = smalloc(sizeof(struct access));
 	
+	//fprintf(stderr,"\nREAD2\n");
 	if (fread(p, sizeof(struct access), 1, file) != 1)
 	{
+	//	fprintf(stderr,"\nREAD3\n");
 		if (ferror(file))
 			error("I/O error");
 			
@@ -97,7 +100,7 @@ extern object_t access_read(FILE *file)
 			return (NULL);
 			
 	}
-	
+	//fprintf(stderr,"\nREAD4\n");
 	return (p);
 }
 
@@ -125,7 +128,7 @@ extern void access_write(FILE *file, object_t obj)
  */
 extern void access_cpy(object_t dest, object_t src)
 {
-	memcpy(dest, src, sizeof(struct access));
+	memcpy(&dest, &src, sizeof(struct access));
 }
 
 /**
@@ -168,7 +171,7 @@ extern unsigned access_getkey(object_t obj)
  * @param obj2 Second access.
  * 
  * @returns Zero if the two addrs access are equal; a negative number if the first
- *          addr access is less than the second; or a positive number if the second
+ *          addr access is less than the second; or a positive number if the first
  *          addr access is greater than the second.
  */
 extern int access_cmp(object_t obj1, object_t obj2)
