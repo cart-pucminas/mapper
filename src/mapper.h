@@ -40,6 +40,7 @@
 	{
 		unsigned use_auction : 1; /**< Use auction?        */
 		unsigned nclusters;       /**< Number of clusters. */
+		struct topology *mesh;    /**< Mesh topology.      */
 	};
 	
 	/**

@@ -199,6 +199,7 @@ int main(int argc, char **argv)
 	/* Build strategy arguments. */
 	args.use_auction = flags & USE_AUCTION;
 	args.nclusters = nclusters;
+	args.mesh = &mesh;
 	
 	map = process_map(m, STRATEGY_KMEANS, &args);
 	
