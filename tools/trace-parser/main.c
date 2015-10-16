@@ -34,7 +34,7 @@
 int main(int argc, char **argv)
 {
 	
-	unsigned size_cache = 40;
+	unsigned size_cache = 10;
 	int x, y;
 	char name_trace[80];
 	
@@ -78,7 +78,6 @@ int main(int argc, char **argv)
 	//Descarregar toda a cache no arquivo de swap
 	fprintf(stderr,"\nCache flush\n");
 	cache_flush(c);	
-
 	//Ferchar arquivo de swap
 	//fclose(swp);
 	
