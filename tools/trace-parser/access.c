@@ -19,6 +19,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <mylib/util.h>
 #include <mylib/object.h>
@@ -47,12 +48,12 @@ void access_destroy(struct access *a)
 }
 
 /* Forward definitions. */
-extern int access_cmp(object_t, object_t);
-extern unsigned access_getkey(object_t);
-extern object_t access_read(FILE *);
-extern void access_write(FILE *, object_t);
-extern void access_cpy(object_t, object_t);
-extern void access_free(object_t);
+static int access_cmp(object_t, object_t);
+static key_t access_getkey(object_t);
+static object_t access_read(FILE *);
+static void access_write(FILE *, object_t);
+static void access_cpy(object_t, object_t);
+static void access_free(object_t);
 
 /**
  * @addtogroup Object
@@ -82,7 +83,7 @@ const struct objinfo access_info = {
  * 
  * @returns An access.
  */
-extern object_t access_read(FILE *file)
+static object_t access_read(FILE *file)
 {
 	//fprintf(stderr,"\nREAD1\n");
 	void *p;
@@ -113,7 +114,7 @@ extern object_t access_read(FILE *file)
  * @param file Target file.
  * @param obj  Target object.
  */
-extern void access_write(FILE *file, object_t obj)
+static void access_write(FILE *file, object_t obj)
 {
 	fwrite(obj, sizeof(struct access), 1, file);
 }
@@ -126,9 +127,9 @@ extern void access_write(FILE *file, object_t obj)
  * @param src  Source access.
  * @param dest Target access.
  */
-extern void access_cpy(object_t dest, object_t src)
+static void access_cpy(object_t dest, object_t src)
 {
-	memcpy(&dest, &src, sizeof(struct access));
+	memcpy(dest, src, sizeof(struct access));
 }
 
 /**
@@ -138,7 +139,7 @@ extern void access_cpy(object_t dest, object_t src)
  * 
  * @param obj Target access.
  */
-extern void access_free(object_t obj)
+static void access_free(object_t obj)
 {
 	free(obj);
 }
@@ -152,7 +153,7 @@ extern void access_free(object_t obj)
  * 
  * @returns The key of an access.
  */
-extern unsigned access_getkey(object_t obj)
+static key_t access_getkey(object_t obj)
 {
 	struct access *a;
 	
@@ -174,7 +175,7 @@ extern unsigned access_getkey(object_t obj)
  *          addr access is less than the second; or a positive number if the first
  *          addr access is greater than the second.
  */
-extern int access_cmp(object_t obj1, object_t obj2)
+static int access_cmp(object_t obj1, object_t obj2)
 {
 	struct access *a;
 	

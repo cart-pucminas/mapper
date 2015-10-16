@@ -38,9 +38,6 @@
 		int access[QTD_THREADS]; /**< Access per thread. */
 	};
 	
-	
-	
-	
 	/* Forward definitions. */
 	extern struct access *access_create(void);
 	extern void access_destroy(struct access *);

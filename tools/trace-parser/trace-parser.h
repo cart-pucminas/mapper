@@ -19,22 +19,18 @@
  */
 
  
-#ifndef TRACE-PARSER_H_
-#define TRACE-PARSER_H_
+#ifndef TRACE_PARSER_H_
+#define TRACE_PARSER_H_
 
-#include <stdlib.h>
+	#include <stdlib.h>
 
-#include <mylib/util.h>
-#include <mylib/object.h>
-#include <mylib/matrix.h>
+	#include <mylib/util.h>
+	#include <mylib/cache.h>
+	#include <mylib/object.h>
+	#include <mylib/matrix.h>
 
+	extern void trace_read(struct cache *, FILE *, int);
+	extern void matrix_generate(FILE *, struct matrix *);
+	extern void cache_update2(struct cache *, object_t);
 
-
-
-extern void trace_read(struct cache *, FILE *, int);
-extern void matrix_generate(FILE *, struct matrix *);
-
-extern void cache_update2(struct cache *, object_t);
-
-
-#endif /* TRACE-PARSER_H_ */
+#endif /* TRACE_PARSER_H_ */

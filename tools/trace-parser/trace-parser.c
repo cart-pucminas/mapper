@@ -81,7 +81,7 @@ void matrix_generate(FILE *swp, struct matrix *m){
 	a = smalloc(sizeof(struct access));
 	
 	//Ler acessos gravados na swap
-	a = access_read(swp);
+	a = access_info.read(swp);
 		
 	while(!feof(swp)){
 
@@ -114,7 +114,7 @@ void matrix_generate(FILE *swp, struct matrix *m){
 		}
 		
 		//Ler acessos gravados na swap
-		a = access_read(swp);
+		a = access_info.read(swp);
 		
 	}
 	
