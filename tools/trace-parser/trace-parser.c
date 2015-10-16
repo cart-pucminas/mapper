@@ -109,25 +109,29 @@ void matrix_generate(FILE *swp, struct matrix *m){
 	
 	struct access *a;
 	a = smalloc(sizeof(struct access));
+	
+	//Ler acessos gravados na swap
+	a = access_read(swp);
 		
 	while(!feof(swp)){
 
-		//Ler acessos gravados na swap
-		a = access_read(swp);
 
 		if (a==NULL){
 				fprintf(stderr,"\nErro ao ler o acesso do arquivo\n");
 				break;
 		}
+		
+		//fprintf(stderr,"\na->addr=%x, a->access[0]=%d, a->access[1]=%d, a->access[2]=%d \n",a->addr, a->access[0], a->access[1], a->access[2]);
+
 
 		//Verificar os compartilhamentos entre cada par de threads
 		for(x=0; x <QTD_THREADS; x++ ){
 			for(y=0; y<QTD_THREADS; y++){
-				
 				if(a->access[x] != 0 && a->access[y] != 0){
 					//Obter a quantidade de bytes compartilhados pelas
 					//threads X, Y até o momento
 					e = matrix_get(m, x, y);
+					//fprintf(stderr, "\nx=%d, y=%d, e=%d\n", x, y, e);
 					if (a->access[x] <= a->access[y])
 						e += a->access[x];
 					else
@@ -138,6 +142,10 @@ void matrix_generate(FILE *swp, struct matrix *m){
 				}			
 			}
 		}
+		
+		//Ler acessos gravados na swap
+		a = access_read(swp);
+		
 	}
 	
 	

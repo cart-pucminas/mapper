@@ -34,7 +34,7 @@
 int main(int argc, char **argv)
 {
 	
-	unsigned size_cache = 65789;
+	unsigned size_cache = 40;
 	int x, y;
 	char name_trace[80];
 	
@@ -110,10 +110,12 @@ int main(int argc, char **argv)
 		return(EXIT_FAILURE);
 	}
 	
+	int e=0;
 	for(x=0; x<QTD_THREADS; x++){
 		for(y=0; y<QTD_THREADS; y++){
-			//fprintf(stderr,"\nx=%d y=%d\n", x, y);
-			fprintf(matrix_shared, "%d;%d;%d\n", x, y, matrix_get(m, x, y));	
+			e=matrix_get(m, x, y);
+		//	fprintf(stderr,"\nx=%d y=%d e=%d\n", x, y, e);
+			fprintf(matrix_shared, "%d;%d;%d\n", x, y, e );	
 				
 		}
 	}
