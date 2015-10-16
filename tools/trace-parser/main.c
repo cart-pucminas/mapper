@@ -35,12 +35,9 @@
 
 int main(int argc, char **argv)
 {
-<<<<<<< HEAD
-	
-	unsigned size_cache = 10;
-=======
+
 	unsigned size_cache = 40;
->>>>>>> e0e7388172e6583b699d85deaae19c03ce38ee71
+
 	int x, y;
 	char name_trace[80];
 
@@ -51,7 +48,8 @@ int main(int argc, char **argv)
 	FILE * swp;
 	
 	//swp = fopen("~/teste-mapper/MG-W/saidas/swap.swp", "w+");
-	swp = fopen("/home/amanda/teste-mapper-reduzido/MG-W/saidas/swap.swp", "w+");
+	//swp = fopen("/home/amanda/teste-mapper-reduzido/MG-W/saidas/swap.swp", "w+");
+	swp = fopen("/home/amanda/mapper/tools/testes/MG-W-saidas/swap.swp", "w+");
 
 	if(swp == NULL){
 		printf("Arquivo de swp não pode ser aberto");
@@ -69,7 +67,7 @@ int main(int argc, char **argv)
 	for(x=0; x<QTD_THREADS; x++){
 		
 		//sprintf(name_trace,"~/teste-mapper/MG-W/out.tid%d.mem.out", x);
-		sprintf(name_trace,"/home/amanda/teste-mapper-reduzido/MG-W/out.tid%d.mem.out", x);
+		sprintf(name_trace,"/home/amanda/mapper/tools/testes/MG-W/out.tid%d.mem.out", x);
 		trace = fopen(name_trace, "r");
 		if(trace == NULL){
 			fprintf(stderr, "\nArquivo de trace não pode ser aberto\n");
@@ -111,7 +109,7 @@ int main(int argc, char **argv)
 	//Gravar a matrix de compartilhamento em um arquivo
 	FILE * matrix_shared; 
 	//matrix_shared = fopen("~/teste-mapper/MG-W/saidas/matrix-shared.out", "w");
-	matrix_shared = fopen("/home/amanda/teste-mapper-reduzido/MG-W/saidas/matrix-shared.out", "w");
+	matrix_shared = fopen("/home/amanda/mapper/tools/testes/MG-W-saidas/matrix-shared.out", "w");
 	
 	if(matrix_shared == NULL){
 		fprintf(stderr, "\nArquivo para gravação da matrix não pode ser aberto\n");

@@ -53,6 +53,7 @@
 			if (accessMem != NULL)
 			{
 				accessMem->access[th] += (rw == 'W') ? 2 : 1;
+				fprintf(stderr,"\nAtualizar accessMem->addr=%x, accessMem->access[0]=%d, accessMem->access[1]=%d, accessMem->access[2]=%d \n",accessMem->addr, accessMem->access[0], accessMem->access[1], accessMem->access[2]);
 				cache_update(c, accessMem);
 				continue;
 			}
@@ -62,7 +63,8 @@
 			accessMem->addr = x;
 			memset(accessMem->access, 0, sizeof(QTD_THREADS*sizeof(int)));
 			accessMem->access[th] += (rw == 'W') ? 2 : 1;
-								
+			
+			fprintf(stderr,"\nInserir accessMem->addr=%x, accessMem->access[0]=%d, accessMem->access[1]=%d, accessMem->access[2]=%d \n",accessMem->addr, accessMem->access[0], accessMem->access[1], accessMem->access[2]);
 			cache_insert(c, accessMem);
 		}
 	}
@@ -71,11 +73,9 @@
 
 void matrix_generate(FILE *swp, struct matrix *m){
 	
-	//Pensar e entender matrix , percorrer cache 
 	int x;
 	int y;
 	int e;
-	
 	
 	struct access *a;
 	a = smalloc(sizeof(struct access));
