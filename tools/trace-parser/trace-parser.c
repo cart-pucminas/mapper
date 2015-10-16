@@ -19,6 +19,8 @@
  */
 
 #include <inttypes.h> 
+#include <string.h>
+
 #include <mylib/util.h>
 #include <mylib/cache.h>
 #include <mylib/object.h>
@@ -26,76 +28,44 @@
 #include "access.h"
 
 
- void trace_read(struct cache *c, FILE * trace, int th){
+ void trace_read(struct cache *c, FILE * trace, int th)
+ {
+	char rw;       /* Access' type.    */
+	int size;      /* Access' size.    */
+	uint64_t addr; /* Access' address. */	
 	
-	char rw;
-	int size;
-	uint64_t addr;	
-	char line[80];
-	char ponto1; //recebe o ponto e vírgula
-	char ponto2; //recebe o ponto e vírgula
+	/* Bad types. */
+	if (sizeof(key_t) < sizeof(uint64_t))
+		error("bad types");
 	
-	int y;
-	
-	struct access *accessMem;
-
-	
-	while( (fscanf(trace,"%s", line))!=EOF ){
-				
-			sscanf(line, "%c%c%d%c%" PRIx64 "%*d", &rw, &ponto1, &size, &ponto2, &addr);	
-	
-
-			if (rw != 'R' && rw != 'W') //Não faz nada se não for leitura e escrita
-				continue;
+	while (fscanf(trace, "%c%*c%d%*c%" PRIx64 "%*d", &rw, &size, &addr) != EOF)
+	{
+		if (rw != 'R' && rw != 'W')
+			continue;
 			
-			uint64_t x;
-			for( x = addr; x < (addr+size); x++ ){
-		
-				//Buscar o access do addr lido na cache
-				if (sizeof(key_t) < sizeof(uint64_t)){
-					printf ("uint64_t= %u \n key_t= %u \n", sizeof(uint64_t), sizeof(key_t));
-					error("Mapeamento de variáveis de tamanhos diferentes");
-				}
-				accessMem = (struct access*) cache_get(c, x);
+		for (uint64_t x = addr; x < (addr+size); x++)
+		{
+			struct access *accessMem;
 				
+			accessMem = cache_get(c, x);
 								
-				if (accessMem !=NULL){
-
-					//Acrescentar o acesso lido 
-					if (rw == 'W')
-						accessMem->access[th] += 2;
-					else
-						accessMem->access[th] += 1;
-					
-					//Atualizar a cache
-					//fprintf(stderr, "\nAtualizar acesso na cache\n");
-					cache_update(c, accessMem);
-
-				}else{
-					//Criar um novo access
-					accessMem = access_create();
-					accessMem->addr = x;
-					//Inicializar vetor de acessos
-					for(y=0; y<QTD_THREADS; y++){
-							accessMem->access[y] = 0;
-					}
-										
-					if (rw == 'W')
-						accessMem->access[th] += 2;
-					else
-						accessMem->access[th] += 1;
-					//Inserir na cache
-					if (sizeof(key_t) < sizeof(uint64_t)){
-						printf ("uint64_t= %u \n key_t= %u \n", sizeof(uint64_t), sizeof(key_t));
-						error("Mapeamento de variáveis de tamanhos diferentes");
-					}
-					//fprintf(stderr, "\nInserir acesso na cache\n");
-					cache_insert(c, accessMem);
-				}
+			/* Update access. */
+			if (accessMem != NULL)
+			{
+				accessMem->access[th] += (rw == 'W') ? 2 : 1;
+				cache_update(c, accessMem);
+				continue;
 			}
-			
-		}//Fim while
-	
+
+			/* Create new access. */
+			accessMem = access_create();
+			accessMem->addr = x;
+			memset(accessMem->access, 0, sizeof(QTD_THREADS*sizeof(int)));
+			accessMem->access[th] += (rw == 'W') ? 2 : 1;
+								
+			cache_insert(c, accessMem);
+		}
+	}
 }
 
 
@@ -111,7 +81,7 @@ void matrix_generate(FILE *swp, struct matrix *m){
 	a = smalloc(sizeof(struct access));
 	
 	//Ler acessos gravados na swap
-	a = access_read(swp);
+	a = access_info.read(swp);
 		
 	while(!feof(swp)){
 
@@ -144,7 +114,7 @@ void matrix_generate(FILE *swp, struct matrix *m){
 		}
 		
 		//Ler acessos gravados na swap
-		a = access_read(swp);
+		a = access_info.read(swp);
 		
 	}
 	
