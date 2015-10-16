@@ -17,7 +17,6 @@
  * along with MyLib. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <limits.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -26,6 +25,7 @@
 #include <mylib/vector.h>
 #include <mylib/ai.h>
 #include <mylib/util.h>
+#include <mylib/table.h>
  
 #include "mapper.h"
 
@@ -35,9 +35,9 @@
  * @param centroids Centroids.
  * @param ncentroids Number of centroids.
  */
-static void destroy_centroids(vector_t *centroids, unsigned ncentroids)
+static void destroy_centroids(vector_t *centroids, int ncentroids)
 {
-	for (unsigned i = 0; i < ncentroids; i++)
+	for (int i = 0; i < ncentroids; i++)
 		vector_destroy(centroids[i]);
 	free(centroids);
 }
@@ -49,18 +49,17 @@ static void destroy_centroids(vector_t *centroids, unsigned ncentroids)
  * @param nprocs Number of processes.
  * @param map    Unbalanced process map.
  * 
- * @returns A balanced process map.
+ * @returns A balanced cluster map.
  */
-static int *balance_auction(const vector_t *procs, int nprocs, int *map)
+static int *balance_auction
+(const vector_t *procs, int nprocs, int *map, int nclusters)
 {
-	matrix_t m;            /* Auction's matrix.   */
-	int *balanced_map;     /* Process map.        */
-	int nclusters;         /* Number of clusters. */
-	vector_t *centroids;   /* Centroids.          */
-	int procs_per_cluster; /* Gotcha?             */
+	matrix_t m;            /* Auction's matrix. */
+	int *balanced_map;     /* Process map.      */
+	vector_t *centroids;   /* Centroids.        */
+	int procs_per_cluster; /* Gotcha?           */
 	
 	centroids = kmeans_centroids(procs, nprocs, map);
-	nclusters = kmeans_count_centroids(map, nprocs);
 	
 	if (nprocs%nclusters)
 		error("invalid number of clusters");
@@ -102,17 +101,16 @@ static int *balance_auction(const vector_t *procs, int nprocs, int *map)
  * @param nprocs Number of processes.
  * @param map    Unbalanced process map.
  * 
- * @returns A balanced process map.
+ * @returns A balanced cluster map.
  */
-static int *balance_greedy(const vector_t *procs, int nprocs, int *map)
+static int *balance_greedy
+(const vector_t *procs, int nprocs, int *map, int nclusters)
 {
-	int *balanced_map;     /* Process map.        */
-	int nclusters;         /* Number of clusters. */
-	vector_t *centroids;   /* Centroids.          */
-	int procs_per_cluster; /* Gotcha?             */
+	int *balanced_map;     /* Process map. */
+	vector_t *centroids;   /* Centroids.   */
+	int procs_per_cluster; /* Gotcha?      */
 	
 	centroids = kmeans_centroids(procs, nprocs, map);
-	nclusters = kmeans_count_centroids(map, nprocs);
 	
 	if (nprocs%nclusters)
 		error("invalid number of clusters");
@@ -168,6 +166,104 @@ static int *balance_greedy(const vector_t *procs, int nprocs, int *map)
 }
 
 /**
+ * @brief Internal implementation of table_split().
+ */
+static void _table_split
+(struct table *t, int i0, int j0, int height, int width, int size)
+{
+	static int count = 0;
+	
+	/* Stop condition reached. */
+	if (width*height <= size)
+	{
+		/* Enumerate region. */
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < width; j++)
+			{
+				table_set(t, i0 + i, j0 + j, smalloc(sizeof(int)));
+				*INTP(table_get(t, i0 + i, j0 + j)) = count;
+			}
+		}
+		
+		count++;
+		
+		return;
+	}
+	
+	/* Split vertically. */
+	if (width > height)
+	{
+		_table_split(t, i0, j0, height, width/2, size);
+		_table_split(t, i0, j0 + width/2, height, width/2, size);
+	}
+	
+	/* Split horizontally. */
+	else
+	{
+		_table_split(t, i0, j0, height/2, width, size);
+		_table_split(t, i0 + height/2, j0, height/2, width, size);
+	}
+}
+
+/**
+ * @brief Splits a table recursively.
+ * 
+ * @param t Target table.
+ */
+static void table_split(struct table *t, int size)
+{
+	_table_split(t, 0, 0, table_height(t), table_width(t), size);
+}
+
+/**
+ * @brief Places processes in the processor.
+ * 
+ * @param mesh       Processor's topology.
+ * @param clustermap Process map.
+ * @param nprocs     Number of processes.
+ * 
+ * @returns Process map.
+ */
+static int *place
+(struct topology *mesh, int *clustermap, int nprocs, int nclusters)
+{
+	int *map;               /* Process map.        */
+	struct table *clusters;	/* Clustered topology. */
+	
+	map = smalloc(nprocs*sizeof(int));
+	clusters = table_create(&integer, mesh->height, mesh->width);
+	
+	table_split(clusters, nprocs/nclusters);
+	
+	/* Place processes in the processor. */
+	for (int i = 0; i < mesh->height; i++)
+	{
+		for (int j = 0; j < mesh->width; j++)
+		{
+			int c;
+			
+			c = *INTP(table_get(clusters, i, j));
+			for (int k = 0; k < nprocs; k++)
+			{
+				if (clustermap[k] == c)
+				{
+					clustermap[k] = -1;
+					map[k] = i*mesh->width + j;
+					break;
+				}
+			}
+		}
+	}
+	
+	/* House keeping. */
+	table_destroy(clusters);
+	
+	return (map);
+}
+
+
+/**
  * @brief Maps processes using kmeans algorithm.
  *
  * @param procs       Processes.
@@ -178,43 +274,36 @@ static int *balance_greedy(const vector_t *procs, int nprocs, int *map)
  * @returns A process map.
  */
 int *map_kmeans
-(const vector_t *procs, unsigned nprocs, void *args)
+(const vector_t *procs, int nprocs, void *args)
 {
-	int *map;             /* Process map.                  */
-	int *balanced_map;     /* Balanced process map.        */
-	unsigned use_auction; /* Use auction balancing?        */
-	unsigned nclusters;   /* Number of clusters.           */
-	double *avg;          /* Average distance in clusters. */
+	int *map;              /* Process map.           */
+	int *clustermap;       /* Cluster map.           */
+	int *balanced_map;     /* Balanced cluster map.  */
+	int use_auction;       /* Use auction balancing? */
+	int nclusters;         /* Number of clusters.    */
+	struct topology *mesh; /* Processor's topology.  */
 	
 	/* Extract arguments. */
 	nclusters = ((struct kmeans_args *)args)->nclusters;
 	use_auction = ((struct kmeans_args *)args)->use_auction;
+	mesh = ((struct kmeans_args *)args)->mesh;
 	
 	/* Sanity check. */
 	assert(nclusters > 0);
+	assert(nprocs == (mesh->height*mesh->width));
 	
-	map = kmeans(procs, nprocs, nclusters, 0.0);
+	clustermap = kmeans(procs, nprocs, nclusters, 0.0);
 	
 	/* Balance. */
 	balanced_map = (use_auction) ?
-		balance_auction(procs, nprocs, map) :
-		balance_greedy(procs, nprocs, map);
+		balance_auction(procs, nprocs, clustermap, nclusters) :
+		balance_greedy(procs, nprocs, clustermap, nclusters);
 	
-	/* Print average distance. */
-	if (verbose)
-	{
-		vector_t *centroids;
-		centroids = kmeans_centroids(procs, nprocs, map);
-		avg = kmeans_average_distance(procs, nprocs, centroids, nclusters, map);
-		for (unsigned i = 0; i < nclusters; i++)
-			fprintf(stderr, "cluster %d: %.10lf\n", i, avg[i]);
-		fprintf(stderr, "\n");
-		free(avg);
-		destroy_centroids(centroids, nclusters);
-	}
+	map = place(mesh, balanced_map, nprocs, nclusters);
 
 	/* House keeping. */
-	free(map);
+	free(clustermap);
+	free(balanced_map);
 	
-	return (balanced_map);
+	return (map);
 }

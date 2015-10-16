@@ -29,8 +29,8 @@
 	 */
 	struct topology
 	{
-		unsigned height; /**< Mesh height. */
-		unsigned width;  /**< Mesh width.  */
+		int height; /**< Mesh height. */
+		int width;  /**< Mesh width.  */
 	};
 	
 	/**
@@ -38,8 +38,9 @@
 	 */
 	struct kmeans_args
 	{
-		unsigned use_auction : 1; /**< Use auction?        */
-		unsigned nclusters;       /**< Number of clusters. */
+		int use_auction : 1;   /**< Use auction?        */
+		int nclusters;         /**< Number of clusters. */
+		struct topology *mesh; /**< Mesh topology.      */
 	};
 	
 	/**
@@ -50,7 +51,7 @@
 	/**@}*/
 
 	/* Forward definitions. */
-	extern int *process_map(matrix_t, unsigned, void *);
+	extern int *process_map(matrix_t, int, void *);
 	
 	/* Forward definitions. */
 	extern bool verbose;
