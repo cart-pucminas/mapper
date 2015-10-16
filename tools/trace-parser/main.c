@@ -20,6 +20,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+
+#include <mylib/util.h>
 #include <mylib/object.h>
 #include <mylib/hash.h>
 #include <mylib/cache.h>
@@ -33,11 +35,13 @@
 
 int main(int argc, char **argv)
 {
-	
 	unsigned size_cache = 40;
 	int x, y;
 	char name_trace[80];
-	
+
+	UNUSED(argc);
+	UNUSED(argv);
+
 	//Abrir arquivo de swap para gravação e leitura
 	FILE * swp;
 	
