@@ -30,104 +30,84 @@
 #include "access.h"
 #include "trace-parser.h"
 
+/* Cache size (in objects). */
+#define CACHE_SIZE 40
 
+/* Program arguments. */
+static int ntraces = 0;          /* Number of trace files. */
+static char **tracefiles = NULL; /* Trace files.           */
+static char *outfile = NULL;     /* Output file.           */
 
+/**
+ * @brief Prints program usage and exits.
+ */
+static void usage(void)
+{
+	printf("usage: trace-parser <trace files> <outputfile>\n");
+	exit(EXIT_SUCCESS);
+}
+
+/**
+ * @brief Gets program arguments.
+ */
+static void readargs(int argc, char **argv)
+{
+	/* Bad usage. */
+	if (argc < 3)
+		usage();
+
+	tracefiles = &argv[1];
+	ntraces = argc - 2;
+	outfile = argv[argc - 1];
+}
 
 int main(int argc, char **argv)
 {
+	FILE *swp;
+	struct cache *c;
+	struct matrix *m;	
+	FILE *matrix_shared;
 
-	unsigned size_cache = 40;
+	readargs(argc, argv);
 
-	int x, y;
-	char name_trace[80];
+	if ((swp = fopen("swap", "w+")) == NULL)
+		error("cannot open swap file");
 
-	UNUSED(argc);
-	UNUSED(argv);
+	c = cache_create(&access_info, swp, CACHE_SIZE);
 
-	//Abrir arquivo de swap para gravação e leitura
-	FILE * swp;
-	
-	//swp = fopen("~/teste-mapper/MG-W/saidas/swap.swp", "w+");
-	//swp = fopen("/home/amanda/teste-mapper-reduzido/MG-W/saidas/swap.swp", "w+");
-	swp = fopen("/home/amanda/mapper/tools/testes/MG-W-saidas/swap.swp", "w+");
-
-	if(swp == NULL){
-		printf("Arquivo de swp não pode ser aberto");
-		return(EXIT_FAILURE);
-	}
-
-	
-	//Criar a Cache
-	struct cache * c = cache_create( &access_info, swp, size_cache);
-
-	printf("\nCache criada\n");
-	
-	FILE * trace;
-	//Ler todos os traces e armazenar os acessos na cache
-	for(x=0; x<QTD_THREADS; x++){
+	/* Read traces. */
+	for (int i = 0; i < ntraces; i++)
+	{
+		FILE *trace;
 		
-		//sprintf(name_trace,"~/teste-mapper/MG-W/out.tid%d.mem.out", x);
-		sprintf(name_trace,"/home/amanda/mapper/tools/testes/MG-W/out.tid%d.mem.out", x);
-		trace = fopen(name_trace, "r");
-		if(trace == NULL){
-			fprintf(stderr, "\nArquivo de trace não pode ser aberto\n");
-			return(EXIT_FAILURE);
-		}
+		if ((trace = fopen(tracefiles[i], "r")) == NULL)
+			error("cannot open trace file");
 		
-		//Ler o trace gravar na cache
-		printf("\nLendo o trace: %s\n", name_trace);
-		trace_read(c, trace, x);
-		
-		//Fechar arquivo de trace
+		trace_read(c, trace, i);
 		fclose(trace);
 	}
 	
-	//Descarregar toda a cache no arquivo de swap
-	fprintf(stderr,"\nCache flush\n");
-	cache_flush(c);	
-	//Ferchar arquivo de swap
-	//fclose(swp);
+	/* Flushe traces on swap file. */
+	cache_flush(c);
 	
-	//Abrir arquivo de swap para leitura 
-	//swp = fopen("~/teste-mapper/MG-W/saidas/swap.swp", "r");
-	//swp = fopen("/home/amamda/teste-mapper-reduzido/MG-W/saidas/swap.swp", "r");
-	
-	fprintf(stderr,"\nColocar ponteiro do arquivo de swap no início\n");
+	/* Create communication matrix. */
 	fseek(swp, 0, SEEK_SET); 
-
-	//Criar matriz de compatilhamento
-	struct matrix * m = matrix_create(QTD_THREADS, QTD_THREADS);
-	
-
-	//Gravar os acessos da swap na matriz de comparitlhamento 
+	m  = matrix_create(QTD_THREADS, QTD_THREADS);
 	matrix_generate(swp, m);
 	
+	
+	if ((matrix_shared = fopen(outfile, "w")) == NULL)
+		error("cannot open output file");
+	
+	for (int i = 0; i < ntraces; i++)
+	{
+		for(int j = 0; j < ntraces; j++)
+			fprintf(matrix_shared, "%d;%d;%d\n", i, j, (int) matrix_get(m, i, j));	
+	}
 
-	//Fechar arquivo de swap
-	fclose(swp);
-	
-	//Gravar a matrix de compartilhamento em um arquivo
-	FILE * matrix_shared; 
-	//matrix_shared = fopen("~/teste-mapper/MG-W/saidas/matrix-shared.out", "w");
-	matrix_shared = fopen("/home/amanda/mapper/tools/testes/MG-W-saidas/matrix-shared.out", "w");
-	
-	if(matrix_shared == NULL){
-		fprintf(stderr, "\nArquivo para gravação da matrix não pode ser aberto\n");
-		return(EXIT_FAILURE);
-	}
-	
-	int e=0;
-	for(x=0; x<QTD_THREADS; x++){
-		for(y=0; y<QTD_THREADS; y++){
-			e=matrix_get(m, x, y);
-		//	fprintf(stderr,"\nx=%d y=%d e=%d\n", x, y, e);
-			fprintf(matrix_shared, "%d;%d;%d\n", x, y, e );	
-				
-		}
-	}
-	
-	
+	/* House keeping. */
 	fclose(matrix_shared);
+	fclose(swp);
 		
 	return (EXIT_SUCCESS);
 }

@@ -53,7 +53,6 @@
 			if (accessMem != NULL)
 			{
 				accessMem->access[th] += (rw == 'W') ? 2 : 1;
-				fprintf(stderr,"\nAtualizar accessMem->addr=%x, accessMem->access[0]=%d, accessMem->access[1]=%d, accessMem->access[2]=%d \n",accessMem->addr, accessMem->access[0], accessMem->access[1], accessMem->access[2]);
 				cache_update(c, accessMem);
 				continue;
 			}
@@ -64,7 +63,6 @@
 			memset(accessMem->access, 0, sizeof(QTD_THREADS*sizeof(int)));
 			accessMem->access[th] += (rw == 'W') ? 2 : 1;
 			
-			fprintf(stderr,"\nInserir accessMem->addr=%x, accessMem->access[0]=%d, accessMem->access[1]=%d, accessMem->access[2]=%d \n",accessMem->addr, accessMem->access[0], accessMem->access[1], accessMem->access[2]);
 			cache_insert(c, accessMem);
 		}
 	}
