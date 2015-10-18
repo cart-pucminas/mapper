@@ -48,11 +48,11 @@ void access_destroy(struct access *a)
 }
 
 /* Forward definitions. */
-static int access_cmp(object_t, object_t);
-static key_t access_getkey(object_t);
+static int access_cmp(const_object_t, const_object_t);
+static key_t access_getkey(const_object_t);
 static object_t access_read(FILE *);
-static void access_write(FILE *, object_t);
-static void access_cpy(object_t, object_t);
+static void access_write(FILE *, const_object_t);
+static void access_cpy(object_t, const_object_t);
 static void access_free(object_t);
 
 /**
@@ -85,15 +85,12 @@ const struct objinfo access_info = {
  */
 static object_t access_read(FILE *file)
 {
-	//fprintf(stderr,"\nREAD1\n");
 	void *p;
 	
 	p = smalloc(sizeof(struct access));
 	
-	//fprintf(stderr,"\nREAD2\n");
 	if (fread(p, sizeof(struct access), 1, file) != 1)
 	{
-	//	fprintf(stderr,"\nREAD3\n");
 		if (ferror(file))
 			error("I/O error");
 			
@@ -101,7 +98,7 @@ static object_t access_read(FILE *file)
 			return (NULL);
 			
 	}
-	//fprintf(stderr,"\nREAD4\n");
+	
 	return (p);
 }
 
@@ -114,7 +111,7 @@ static object_t access_read(FILE *file)
  * @param file Target file.
  * @param obj  Target object.
  */
-static void access_write(FILE *file, object_t obj)
+static void access_write(FILE *file, const_object_t obj)
 {
 	fwrite(obj, sizeof(struct access), 1, file);
 }
@@ -127,7 +124,7 @@ static void access_write(FILE *file, object_t obj)
  * @param src  Source access.
  * @param dest Target access.
  */
-static void access_cpy(object_t dest, object_t src)
+static void access_cpy(object_t dest, const_object_t src)
 {
 	memcpy(dest, src, sizeof(struct access));
 }
@@ -153,7 +150,7 @@ static void access_free(object_t obj)
  * 
  * @returns The key of an access.
  */
-static key_t access_getkey(object_t obj)
+static key_t access_getkey(const_object_t obj)
 {
 	struct access *a;
 	
@@ -175,7 +172,7 @@ static key_t access_getkey(object_t obj)
  *          addr access is less than the second; or a positive number if the first
  *          addr access is greater than the second.
  */
-static int access_cmp(object_t obj1, object_t obj2)
+static int access_cmp(const_object_t obj1, const_object_t obj2)
 {
 	struct access *a;
 	
