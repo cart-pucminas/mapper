@@ -51,8 +51,7 @@ static void destroy_centroids(vector_t *centroids, int ncentroids)
  * 
  * @returns A balanced cluster map.
  */
-static int *balance_auction
-(const vector_t *procs, int nprocs, int *map, int nclusters)
+static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
 {
 	matrix_t m;            /* Auction's matrix.    */
 	int *balanced_map;     /* Process map.         */
@@ -94,82 +93,6 @@ static int *balance_auction
 	
 	/* House keeping. */
 	matrix_destroy(m);
-	destroy_centroids(centroids, nclusters);
-	
-	return (balanced_map);
-}
-
-/**
- * @brief Balances processes evenly among clusters using a greedy strategy.
- * 
- * @param procs  Processes.
- * @param nprocs Number of processes.
- * @param map    Unbalanced process map.
- * 
- * @returns A balanced cluster map.
- */
-static int *balance_greedy
-(const vector_t *procs, int nprocs, int *map, int nclusters)
-{
-	int *balanced_map;     /* Process map.         */
-	vector_t *centroids;   /* Centroids.           */
-	int procs_per_cluster; /* Gotcha?              */
-	int ncentroids;        /* Number of centroids. */
-	
-	centroids = kmeans_centroids(procs, nprocs, map);
-	ncentroids = kmeans_count_centroids(map, nprocs);
-	
-	if (nprocs%nclusters)
-		error("invalid number of clusters");
-		
-	if (ncentroids != nclusters)
-		error("bad number of centroids");
-	
-	procs_per_cluster = nprocs/nclusters;
-	
-	balanced_map = smalloc(nprocs*sizeof(int));
-	memcpy(balanced_map, map, nprocs*sizeof(int));
-	
-	/* Balance. */
-	for (int i = 0; i < nclusters; i++)
-	{
-		int n1 = kmeans_count_points(balanced_map, nprocs, i);
-		
-		/* Take a processes out from this cluster. */
-		while (n1-- > procs_per_cluster)
-		{
-			int farthest;
-			double d1, d2;
-			
-			/* Get farthest process. */
-			farthest = -1;
-			for (int j = 0; j < nprocs; j++)
-			{
-				if (balanced_map[j] != i)
-					continue;
-				
-				if (farthest < 0)
-				{
-					d1 = vector_distance(procs[farthest = j], centroids[i]);
-					continue;
-				}
-				
-				if ((d2 = vector_distance(procs[j], centroids[i])) > d1)
-					farthest = j, d2 = d1;
-			}
-			
-			/* Get not crowded cluster. */
-			for (int j = 0; j < nclusters; j++)
-			{
-				if ((kmeans_count_points(balanced_map, nprocs, j)) >= procs_per_cluster)
-					continue;
-				
-				balanced_map[farthest] = j;
-			}
-		}
-	}
-	
-	/* House keeping. */
 	destroy_centroids(centroids, nclusters);
 	
 	return (balanced_map);
@@ -287,11 +210,7 @@ static int *kmeans_balanced(const vector_t *data, int npoints, int ncentroids)
 	int *balanced_map; /* Balanced cluster map. */
 	
 	clustermap = kmeans(data, npoints, ncentroids, 0.0);
-	
-	/* Balance. */
-	balanced_map = (1) ?
-		balance_auction(data, npoints, clustermap, ncentroids) :
-		balance_greedy(data, npoints, clustermap, ncentroids);
+	balanced_map = balance(data, npoints, clustermap, ncentroids);
 		
 	/* House keeping. */
 	free(clustermap);
