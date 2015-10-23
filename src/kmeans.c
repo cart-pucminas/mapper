@@ -54,15 +54,20 @@ static void destroy_centroids(vector_t *centroids, int ncentroids)
 static int *balance_auction
 (const vector_t *procs, int nprocs, int *map, int nclusters)
 {
-	matrix_t m;            /* Auction's matrix. */
-	int *balanced_map;     /* Process map.      */
-	vector_t *centroids;   /* Centroids.        */
-	int procs_per_cluster; /* Gotcha?           */
+	matrix_t m;            /* Auction's matrix.    */
+	int *balanced_map;     /* Process map.         */
+	int ncentroids;        /* Number of centroids. */
+	vector_t *centroids;   /* Centroids.           */
+	int procs_per_cluster; /* Gotcha?              */
 	
 	centroids = kmeans_centroids(procs, nprocs, map);
+	ncentroids = kmeans_count_centroids(map, nprocs);
 	
 	if (nprocs%nclusters)
 		error("invalid number of clusters");
+		
+	if (ncentroids != nclusters)
+		error("bad number of centroids");
 	
 	procs_per_cluster = nprocs/nclusters;
 	
@@ -106,14 +111,19 @@ static int *balance_auction
 static int *balance_greedy
 (const vector_t *procs, int nprocs, int *map, int nclusters)
 {
-	int *balanced_map;     /* Process map. */
-	vector_t *centroids;   /* Centroids.   */
-	int procs_per_cluster; /* Gotcha?      */
+	int *balanced_map;     /* Process map.         */
+	vector_t *centroids;   /* Centroids.           */
+	int procs_per_cluster; /* Gotcha?              */
+	int ncentroids;        /* Number of centroids. */
 	
 	centroids = kmeans_centroids(procs, nprocs, map);
+	ncentroids = kmeans_count_centroids(map, nprocs);
 	
 	if (nprocs%nclusters)
 		error("invalid number of clusters");
+		
+	if (ncentroids != nclusters)
+		error("bad number of centroids");
 	
 	procs_per_cluster = nprocs/nclusters;
 	
