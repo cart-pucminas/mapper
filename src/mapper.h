@@ -38,7 +38,6 @@
 	 */
 	struct kmeans_args
 	{
-		int use_auction : 1;   /**< Use auction?        */
 		int nclusters;         /**< Number of clusters. */
 		struct topology *mesh; /**< Mesh topology.      */
 	};

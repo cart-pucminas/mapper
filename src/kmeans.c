@@ -272,6 +272,32 @@ static int *place
 	return (map);
 }
 
+/**
+ * @brief (Balanced) Kmeans clustering.
+ * 
+ * @param data Data that shall be clustered.
+ * @param npoints Number of points that shall be clustered.
+ * @param ncentroids Number of centroids
+ * 
+ * @returns A map that indicates in which cluster each data point is located.
+ */
+static int *kmeans_balanced(const vector_t *data, int npoints, int ncentroids)
+{
+	int *clustermap;   /* Cluster map.          */
+	int *balanced_map; /* Balanced cluster map. */
+	
+	clustermap = kmeans(data, npoints, ncentroids, 0.0);
+	
+	/* Balance. */
+	balanced_map = (1) ?
+		balance_auction(data, npoints, clustermap, ncentroids) :
+		balance_greedy(data, npoints, clustermap, ncentroids);
+		
+	/* House keeping. */
+	free(clustermap);
+	
+	return (balanced_map);
+}
 
 /**
  * @brief Maps processes using kmeans algorithm.
@@ -287,33 +313,24 @@ int *map_kmeans
 (const vector_t *procs, int nprocs, void *args)
 {
 	int *map;              /* Process map.           */
-	int *clustermap;       /* Cluster map.           */
-	int *balanced_map;     /* Balanced cluster map.  */
-	int use_auction;       /* Use auction balancing? */
+	int *clustermap;       /* Balanced cluster map.  */
 	int nclusters;         /* Number of clusters.    */
 	struct topology *mesh; /* Processor's topology.  */
 	
 	/* Extract arguments. */
 	nclusters = ((struct kmeans_args *)args)->nclusters;
-	use_auction = ((struct kmeans_args *)args)->use_auction;
 	mesh = ((struct kmeans_args *)args)->mesh;
 	
 	/* Sanity check. */
 	assert(nclusters > 0);
 	assert(nprocs == (mesh->height*mesh->width));
 	
-	clustermap = kmeans(procs, nprocs, nclusters, 0.0);
+	clustermap = kmeans_balanced(procs, nprocs, nclusters);
 	
-	/* Balance. */
-	balanced_map = (use_auction) ?
-		balance_auction(procs, nprocs, clustermap, nclusters) :
-		balance_greedy(procs, nprocs, clustermap, nclusters);
-	
-	map = place(mesh, balanced_map, nprocs, nclusters);
+	map = place(mesh, clustermap, nprocs, nclusters);
 
 	/* House keeping. */
 	free(clustermap);
-	free(balanced_map);
 	
 	return (map);
 }
