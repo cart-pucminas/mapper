@@ -26,6 +26,7 @@
 #include <mylib/ai.h>
 #include <mylib/util.h>
 #include <mylib/table.h>
+#include <mylib/queue.h>
  
 #include "mapper.h"
 
@@ -190,6 +191,11 @@ static int *place
 	}
 	
 	/* House keeping. */
+	for (int i = 0; i < mesh->height; i++)
+	{
+		for (int j = 0; j < mesh->width; j++)
+			free(table_get(clusters, i, j));
+	}
 	table_destroy(clusters);
 	
 	return (map);
@@ -219,6 +225,127 @@ static int *kmeans_balanced(const vector_t *data, int npoints, int ncentroids)
 }
 
 /**
+ * @brief Task.
+ */
+struct task
+{
+	int mask;
+	int depth;
+	int npoints;
+	int *ids; 
+	vector_t *data;
+};
+
+
+/**
+ * @brief Creates task.
+ */
+static struct task *task_create(int depth, unsigned mask, int npoints)
+{
+	struct task *t;
+	
+	t = smalloc(sizeof(struct task));
+	t->data = smalloc(npoints*sizeof(vector_t));
+	t->depth = depth;
+	t->mask = mask;
+	t->ids = smalloc(npoints*sizeof(int));
+	t->npoints = npoints;
+	
+	return (t);
+}
+
+/**
+ * @brief Destroys a task.
+ */
+static void task_destroy(struct task *t)
+{
+	free(t->data);
+	free(t->ids);
+	free(t);
+}
+
+/**
+ * @brief (Hierarchical) Kmeans clustering.
+ * 
+ * @param data Data that shall be clustered.
+ * @param npoints Number of points that shall be clustered.
+ * @param ncentroids Number of centroids
+ * 
+ * @returns A map that indicates in which cluster each data point is located.
+ */
+static int *kmeans_hierarchical(const vector_t *data, int npoints)
+{
+	queue_t tasks;   /* Tasks.              */
+	struct task *t;  /* Working task.       */
+	int *clustermap; /* Current clustermap. */
+	
+	clustermap = smalloc(npoints*sizeof(int));
+	tasks = queue_create(NULL);
+	
+	/* Create task. */
+	t = task_create(0, 0, npoints);
+	for (int i = 0; i < npoints; i++)
+		t->ids[i] = i, t->data[i] = data[i];
+	
+	queue_enqueue(tasks, t);
+	
+	/* Walk through the hierarychy. */
+	while (!queue_empty(tasks))
+	{
+		int *partialmap;
+		
+		t = queue_dequeue(tasks);
+		
+		fprintf(stderr, "===\n");
+		
+		partialmap = kmeans_balanced(t->data, t->npoints, 2);
+		
+		/* Fix cluster map. */
+		for (int i = 0; i < t->npoints; i++)
+			clustermap[t->ids[i]] = (partialmap[i] << t->depth) | t->mask;
+			
+		for (int i = 0; i < npoints; i++)
+			fprintf(stderr, "%x ", clustermap[i]);
+		fprintf(stderr, "\n");
+		
+		/* Enqueue child tasks. */
+		if (0)
+		{
+			int mask0, mask1;
+			struct task *t0, *t1;
+			
+			mask0 = (0 << t->depth) | t->mask;
+			mask1 = (1 << t->depth) | t->mask;
+			
+			/* Create tasks. */
+			t0 = task_create(t->depth + 1, mask0, t->npoints/2);
+			t1 = task_create(t->depth + 1, mask1, t->npoints/2);
+			
+			for (int i = 0, i0 = 0, i1 = 0; i < npoints; i++)
+			{
+				if ((clustermap[i] & mask0) == mask0)
+					t0->ids[i0] = i, t0->data[i0] = data[i], i0++;
+				else if ((clustermap[i] & mask1) == mask1)
+					t1->ids[i1] = i, t1->data[i1] = data[i], i1++;
+			}
+			
+			queue_enqueue(tasks, t0);
+			queue_enqueue(tasks, t1);
+		}
+		
+		/* House keeping. */
+		free(partialmap);
+		task_destroy(t);
+		fprintf(stderr, "---\n");
+	}
+	
+	/* House keeping. */
+	queue_destroy(tasks);
+	
+	return (clustermap);
+}
+
+/**
  * @brief Maps processes using kmeans algorithm.
  *
  * @param procs       Processes.
@@ -235,6 +362,8 @@ int *map_kmeans
 	int *clustermap;       /* Balanced cluster map.  */
 	int nclusters;         /* Number of clusters.    */
 	struct topology *mesh; /* Processor's topology.  */
+	
+	UNUSED(kmeans_hierarchical);
 	
 	/* Extract arguments. */
 	nclusters = ((struct kmeans_args *)args)->nclusters;
