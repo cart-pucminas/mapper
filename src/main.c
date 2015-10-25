@@ -238,7 +238,7 @@ int main(int argc, char **argv)
 	/* Build strategy arguments. */
 	args.nclusters = nclusters;
 	args.mesh = &mesh;
-	args.hierarchical = (flags & USE_HIERARCHICAL);
+	args.hierarchical = (flags & USE_HIERARCHICAL) ? 1 : 0;
 	
 	map = process_map(m, STRATEGY_KMEANS, &args);
 	
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
 	for (int i = 0; i < nprocs; i++)
 		printf("%3u %d\n", i, map[i]);
 	if (verbose)
-		fprintf(stderr, "fitness: %lf\n", evaluate(map, nprocs, m, &mesh));
+		fprintf(stderr, " %lf\n", evaluate(map, nprocs, m, &mesh));
 	
 	/* House keeping. */
 	free(map);
