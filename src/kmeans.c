@@ -103,40 +103,42 @@ static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
  * @brief Internal implementation of table_split().
  */
 static void _table_split
-(struct table *t, int i0, int j0, int height, int width, int size)
+(struct table *t, int i0, int j0, int height, int width, int size, int depth)
 {
-	static int count = 0;
-	
 	/* Stop condition reached. */
 	if (width*height <= size)
-	{
-		/* Enumerate region. */
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < width; j++)
-			{
-				table_set(t, i0 + i, j0 + j, smalloc(sizeof(int)));
-				*INTP(table_get(t, i0 + i, j0 + j)) = count;
-			}
-		}
-		
-		count++;
-		
 		return;
-	}
 	
 	/* Split vertically. */
 	if (width > height)
 	{
-		_table_split(t, i0, j0, height, width/2, size);
-		_table_split(t, i0, j0 + width/2, height, width/2, size);
+		/* Enumerate region. */
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < width/2; j++)
+				*INTP(table_get(t, i0 + i, j0 + j)) |= 0 << depth;
+			for (int j = width/2; j < width; j++)
+				*INTP(table_get(t, i0 + i, j0 + j)) |= 1 << depth;
+		}
+		
+		_table_split(t, i0, j0, height, width/2, size, depth + 1);
+		_table_split(t, i0, j0 + width/2, height, width/2, size, depth + 1);
 	}
 	
 	/* Split horizontally. */
 	else
 	{
-		_table_split(t, i0, j0, height/2, width, size);
-		_table_split(t, i0 + height/2, j0, height/2, width, size);
+		/* Enumerate region. */
+		for (int j = 0; j < width; j++)
+		{
+			for (int i = 0; i < height/2; i++)
+				*INTP(table_get(t, i0 + i, j0 + j)) |= 0 << depth;
+			for (int i = height/2; i < width; i++)
+				*INTP(table_get(t, i0 + i, j0 + j)) |= 1 << depth;
+		}
+		
+		_table_split(t, i0, j0, height/2, width, size, depth + 1);
+		_table_split(t, i0 + height/2, j0, height/2, width, size, depth + 1);
 	}
 }
 
@@ -147,7 +149,14 @@ static void _table_split
  */
 static void table_split(struct table *t, int size)
 {
-	_table_split(t, 0, 0, table_height(t), table_width(t), size);
+	/* Create table elements. */
+	for (unsigned i = 0; i < table_height(t); i++)
+	{
+		for (unsigned j = 0; j < table_width(t); j++)
+			table_set(t, i, j, scalloc(1, sizeof(int)));
+	}
+		
+	_table_split(t, 0, 0, table_height(t), table_width(t), size, 0);
 }
 
 /**
