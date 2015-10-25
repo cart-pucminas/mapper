@@ -30,6 +30,8 @@
  
 #include "mapper.h"
 
+#define AUCTION_SLACK 0.0001
+
 /**
  * @brief Destroys centroids.
  * 
@@ -68,7 +70,7 @@ static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
 		
 	if (ncentroids != nclusters)
 		error("bad number of centroids");
-	
+
 	procs_per_cluster = nprocs/nclusters;
 	
 	m = matrix_create(nprocs, nprocs);
@@ -86,7 +88,7 @@ static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
 		}
 	}
 	
-	balanced_map = auction(m, 0.0001);
+	balanced_map = auction(m, AUCTION_SLACK);
 	
 	/* Fix map. */
 	for (int i = 0; i < nprocs; i++)
@@ -94,7 +96,7 @@ static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
 	
 	/* House keeping. */
 	matrix_destroy(m);
-	destroy_centroids(centroids, nclusters);
+	destroy_centroids(centroids, ncentroids);
 	
 	return (balanced_map);
 }
@@ -245,7 +247,6 @@ struct task
 	vector_t *data;
 };
 
-
 /**
  * @brief Creates task.
  */
@@ -312,7 +313,7 @@ static int *kmeans_hierarchical(const vector_t *data, int npoints)
 			clustermap[t->ids[i]] = (partialmap[i] << t->depth) | t->mask;
 		
 		/* Enqueue child tasks. */
-		if (t->npoints > 2)
+		if (t->npoints > 4)
 		{
 			int mask0, mask1;
 			struct task *t0, *t1;
@@ -373,15 +374,23 @@ int *map_kmeans(const vector_t *procs, int nprocs, void *args)
 	assert(nclusters > 0);
 	assert(nprocs == (mesh->height*mesh->width));
 
+	/* Hierarchical kmeans. */
 	if (hierarchical)
-		map = kmeans_hierarchical(procs, nprocs);
+	{
+		clustermap = kmeans_hierarchical(procs, nprocs);
+		
+		map = place(mesh, clustermap, nprocs, nprocs/2);
+	}
 	
+	/* Standard kmeans. */
 	else
 	{
 		clustermap = kmeans_balanced(procs, nprocs, nclusters);
 		map = place(mesh, clustermap, nprocs, nclusters);
-		free(clustermap);
 	}
+	
+	/* House keeping. */
+	free(clustermap);
 	
 	return (map);
 }
