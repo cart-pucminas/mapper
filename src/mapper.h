@@ -38,8 +38,9 @@
 	 */
 	struct kmeans_args
 	{
-		int nclusters;         /**< Number of clusters. */
-		struct topology *mesh; /**< Mesh topology.      */
+		int nclusters;         /**< Number of clusters.   */
+		struct topology *mesh; /**< Mesh topology.        */
+		int hierarchical : 1;  /**< Hierarchical mapping? */
 	};
 	
 	/**

@@ -34,6 +34,7 @@
 /**@{*/
 #define USE_KMEANS        (1 << 0)
 #define USE_COMMUNICATION (1 << 1)
+#define USE_HIERARCHICAL  (1 << 2)
 /**@}*/
 
 /* Program arguments. */
@@ -56,7 +57,7 @@ static void usage(void)
 	printf("Usage: mapper [options] --topology <height x width> --communication <filename>\n\n");
 	printf("Brief maps processes on a processor\n\n");
 	printf("Options:\n");
-	printf("    --auction-balance     use auction balance\n");
+	printf("    --hierarchical        use hierarchical mapping\n");
 	printf("    --kmeans <nclusters>  use kmeans strategy\n");
 	printf("    --verbose             be verbose\n");
 	
@@ -121,6 +122,8 @@ static void readargs(int argc, char **argv)
 		/* Parse argument. */
 		if (!strcmp(arg, "--help"))
 			usage();
+		else if (!strcmp(arg, "--hierarchical"))
+			flags |= USE_HIERARCHICAL;
 		else if (!strcmp(arg, "--kmeans"))
 			state = STATE_SET_KMEANS;
 		else if(!strcmp(arg, "--topology"))
@@ -235,6 +238,7 @@ int main(int argc, char **argv)
 	/* Build strategy arguments. */
 	args.nclusters = nclusters;
 	args.mesh = &mesh;
+	args.hierarchical = (flags & USE_HIERARCHICAL);
 	
 	map = process_map(m, STRATEGY_KMEANS, &args);
 	

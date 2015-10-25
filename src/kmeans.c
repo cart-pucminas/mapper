@@ -296,20 +296,14 @@ static int *kmeans_hierarchical(const vector_t *data, int npoints)
 		
 		t = queue_dequeue(tasks);
 		
-		fprintf(stderr, "===\n");
-		
 		partialmap = kmeans_balanced(t->data, t->npoints, 2);
 		
 		/* Fix cluster map. */
 		for (int i = 0; i < t->npoints; i++)
 			clustermap[t->ids[i]] = (partialmap[i] << t->depth) | t->mask;
-			
-		for (int i = 0; i < npoints; i++)
-			fprintf(stderr, "%x ", clustermap[i]);
-		fprintf(stderr, "\n");
 		
 		/* Enqueue child tasks. */
-		if (0)
+		if (t->npoints > 2)
 		{
 			int mask0, mask1;
 			struct task *t0, *t1;
@@ -320,13 +314,12 @@ static int *kmeans_hierarchical(const vector_t *data, int npoints)
 			/* Create tasks. */
 			t0 = task_create(t->depth + 1, mask0, t->npoints/2);
 			t1 = task_create(t->depth + 1, mask1, t->npoints/2);
-			
-			for (int i = 0, i0 = 0, i1 = 0; i < npoints; i++)
+			for (int i = 0, i0 = 0, i1 = 0; i < t->npoints; i++)
 			{
-				if ((clustermap[i] & mask0) == mask0)
-					t0->ids[i0] = i, t0->data[i0] = data[i], i0++;
-				else if ((clustermap[i] & mask1) == mask1)
-					t1->ids[i1] = i, t1->data[i1] = data[i], i1++;
+				if (partialmap[i] == 0)
+					t0->ids[i0] = t->ids[i], t0->data[i0++] = data[t->ids[i]];
+				else
+					t1->ids[i1] = t->ids[i], t1->data[i1++] = data[t->ids[i]];
 			}
 			
 			queue_enqueue(tasks, t0);
@@ -336,7 +329,6 @@ static int *kmeans_hierarchical(const vector_t *data, int npoints)
 		/* House keeping. */
 		free(partialmap);
 		task_destroy(t);
-		fprintf(stderr, "---\n");
 	}
 	
 	/* House keeping. */
@@ -355,30 +347,32 @@ static int *kmeans_hierarchical(const vector_t *data, int npoints)
  *
  * @returns A process map.
  */
-int *map_kmeans
-(const vector_t *procs, int nprocs, void *args)
+int *map_kmeans(const vector_t *procs, int nprocs, void *args)
 {
 	int *map;              /* Process map.           */
 	int *clustermap;       /* Balanced cluster map.  */
 	int nclusters;         /* Number of clusters.    */
+	int hierarchical;      /* Hierarchical mapping?  */
 	struct topology *mesh; /* Processor's topology.  */
 	
-	UNUSED(kmeans_hierarchical);
-	
 	/* Extract arguments. */
+	hierarchical = ((struct kmeans_args *)args)->hierarchical;
 	nclusters = ((struct kmeans_args *)args)->nclusters;
 	mesh = ((struct kmeans_args *)args)->mesh;
 	
 	/* Sanity check. */
 	assert(nclusters > 0);
 	assert(nprocs == (mesh->height*mesh->width));
-	
-	clustermap = kmeans_balanced(procs, nprocs, nclusters);
-	
-	map = place(mesh, clustermap, nprocs, nclusters);
 
-	/* House keeping. */
-	free(clustermap);
+	if (hierarchical)
+		map = kmeans_hierarchical(procs, nprocs);
+	
+	else
+	{
+		clustermap = kmeans_balanced(procs, nprocs, nclusters);
+		map = place(mesh, clustermap, nprocs, nclusters);
+		free(clustermap);
+	}
 	
 	return (map);
 }
