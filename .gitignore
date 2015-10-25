@@ -9,6 +9,7 @@ include/mylib
 *.o
 *.swp
 *.pdf
+*.trace
 
 # Exceptions.
 !bin/.gitignore
