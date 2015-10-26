@@ -30,8 +30,6 @@
  
 #include "mapper.h"
 
-#define AUCTION_SLACK 0.0001
-
 /**
  * @brief Destroys centroids.
  * 
@@ -44,6 +42,10 @@ static void destroy_centroids(vector_t *centroids, int ncentroids)
 		vector_destroy(centroids[i]);
 	free(centroids);
 }
+
+#ifdef USE_AUCTION
+
+#define AUCTION_SLACK 0.001
 
 /**
  * @brief Balances processes evenly among clusters using auction's algorithm.
@@ -101,6 +103,86 @@ static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
 	
 	return (balanced_map);
 }
+
+#else
+
+/**
+ * @brief Balances processes evenly among clusters using a greedy strategy.
+ * 
+ * @param procs  Processes.
+ * @param nprocs Number of processes.
+ * @param map    Unbalanced process map.
+ * 
+ * @returns A balanced cluster map.
+ */
+static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
+{
+	int *balanced_map;     /* Process map.         */
+	vector_t *centroids;   /* Centroids.           */
+	int procs_per_cluster; /* Gotcha?              */
+	int ncentroids;        /* Number of centroids. */
+	
+	ncentroids = kmeans_count_centroids(map, nprocs);
+	
+	if (nprocs%nclusters)
+		error("invalid number of clusters");
+		
+	if (ncentroids != nclusters)
+		error("bad number of centroids");
+		
+	centroids = kmeans_centroids(procs, nprocs, map);
+	
+	procs_per_cluster = nprocs/nclusters;
+	
+	balanced_map = smalloc(nprocs*sizeof(int));
+	memcpy(balanced_map, map, nprocs*sizeof(int));
+	
+	/* Balance. */
+	for (int i = 0; i < nclusters; i++)
+	{
+		int n1 = kmeans_count_points(balanced_map, nprocs, i);
+		
+		/* Take a processes out from this cluster. */
+		while (n1-- > procs_per_cluster)
+		{
+			int farthest;
+			double d1, d2;
+			
+			/* Get farthest process. */
+			farthest = -1;
+			for (int j = 0; j < nprocs; j++)
+			{
+				if (balanced_map[j] != i)
+					continue;
+				
+				if (farthest < 0)
+				{
+					d1 = vector_distance(procs[farthest = j], centroids[i]);
+					continue;
+				}
+				
+				if ((d2 = vector_distance(procs[j], centroids[i])) > d1)
+					farthest = j, d2 = d1;
+			}
+			
+			/* Get not crowded cluster. */
+			for (int j = 0; j < nclusters; j++)
+			{
+				if ((kmeans_count_points(balanced_map, nprocs, j)) >= procs_per_cluster)
+					continue;
+				
+				balanced_map[farthest] = j;
+			}
+		}
+	}
+	
+	/* House keeping. */
+	destroy_centroids(centroids, nclusters);
+	
+	return (balanced_map);
+}
+
+#endif
 
 /**
  * @brief Internal implementation of table_split().
@@ -372,7 +454,8 @@ int *map_kmeans(const vector_t *procs, int nprocs, void *args)
 	mesh = ((struct kmeans_args *)args)->mesh;
 	
 	/* Sanity check. */
-	assert(nclusters > 0);
+	if (!hierarchical)
+		assert(nclusters > 0);
 	assert(nprocs == (mesh->height*mesh->width));
 
 	/* Hierarchical kmeans. */
