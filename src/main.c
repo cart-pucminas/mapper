@@ -38,7 +38,7 @@
 
 /* Program arguments. */
 static unsigned flags = 0;            /* Argument flags.       */
-static FILE *communication = NULL;    /* Communication matrix. */
+static FILE *input = NULL;            /* Input file.           */
 static int nclusters = 0;             /* Number of clusters.   */
 static struct topology mesh = {0, 0}; /* Processor's topology. */
 bool verbose = false;                 /* Be verbose.           */
@@ -53,9 +53,10 @@ static int nprocs = 0;
  */
 static void usage(void)
 {
-	printf("Usage: mapper [options] --topology <height x width> --communication <filename>\n\n");
+	printf("Usage: mapper [options] --topology <height>x<width> --input <filename>\n\n");
 	printf("Brief maps processes on a processor\n\n");
 	printf("Options:\n");
+	printf("    --help                  display this information\n");
 	printf("    --hierarchical          use hierarchical mapping\n");
 	printf("    --nclusters <nclusters> set number of clusters in kmeans\n");
 	printf("    --verbose               be verbose\n");
@@ -70,10 +71,10 @@ static void readargs(int argc, char **argv)
 {
 	/* Parsing states. */
 	enum parsing_states {
-		STATE_READ_ARG,         /* Read argument.          */
-		STATE_SET_NCLUSTERS,    /* Set kmeans parameters.  */
-		STATE_SET_TOPOLOGY,     /* Set topology file.      */
-		STATE_SET_COMMUNICATION /* Set communication file. */
+		STATE_READ_ARG,      /* Read argument.          */
+		STATE_SET_NCLUSTERS, /* Set kmeans parameters.  */
+		STATE_SET_TOPOLOGY,  /* Set topology file.      */
+		STATE_SET_INPUT      /* Set input file.         */
 	};
 	
 	int state;
@@ -99,13 +100,12 @@ static void readargs(int argc, char **argv)
 					sscanf(arg, "%u%*c%u", &mesh.height, &mesh.width);
 					break;
 				
-				/* Set communication files. */
-				case STATE_SET_COMMUNICATION:
-					flags |= USE_COMMUNICATION;
-					if (communication != NULL)
-						communication = freopen(arg, "r", communication);
+				/* Set input file. */
+				case STATE_SET_INPUT:
+					if (input != NULL)
+						input = freopen(arg, "r", input);
 					else
-						communication = fopen(arg, "r");
+						input = fopen(arg, "r");
 					break;
 				
 				/* Wrong usage. */
@@ -126,8 +126,8 @@ static void readargs(int argc, char **argv)
 			state = STATE_SET_NCLUSTERS;
 		else if(!strcmp(arg, "--topology"))
 			state = STATE_SET_TOPOLOGY;
-		else if (!strcmp(arg, "--communication"))
-			state = STATE_SET_COMMUNICATION;
+		else if (!strcmp(arg, "--input"))
+			state = STATE_SET_INPUT;
 		else if (!strcmp(arg, "--verbose"))
 			verbose = true;
 	}
@@ -138,8 +138,8 @@ static void readargs(int argc, char **argv)
  */
 static void chkargs(void)
 {
-	if (communication == NULL)
-		error("cannot open communication file");
+	if (input == NULL)
+		error("cannot open input file");
 	if ((mesh.height == 0) || (mesh.width == 0))
 		error("bad processor's topology");
 	if (!(flags & USE_HIERARCHICAL) && (nclusters == 0))
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
 	
 	nprocs = mesh.height*mesh.width;
 	
-	m = read_communication_matrix(communication);
+	m = read_communication_matrix(input);
 	
 	/* Build strategy arguments. */
 	args.nclusters = nclusters;
@@ -249,7 +249,7 @@ int main(int argc, char **argv)
 	/* House keeping. */
 	free(map);
 	matrix_destroy(m);
-	fclose(communication);
+	fclose(input);
 	
 	return (0);
 }
