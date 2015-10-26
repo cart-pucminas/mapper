@@ -142,7 +142,7 @@ static void chkargs(void)
 		error("cannot open communication file");
 	if ((mesh.height == 0) || (mesh.width == 0))
 		error("bad processor's topology");
-	if ((flags & USE_HIERARCHICAL) && (nclusters == 0))
+	if (!(flags & USE_HIERARCHICAL) && (nclusters == 0))
 		error("invalid kmeans parameters");
 }
 
@@ -209,7 +209,7 @@ static double evaluate(int *map, int nprocs, matrix_t traffic, struct topology *
 					   (map[i]%mesh->width > map[j]%mesh->width) ?
 					    map[i]%mesh->width - map[j]%mesh->width :
 					    map[j]%mesh->width - map[i]%mesh->width;
-					    
+						
 			fitness += distance*matrix_get(traffic, i, j);
 		}
 	}
