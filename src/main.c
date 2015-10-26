@@ -32,9 +32,8 @@
  * @brief Program flags.
  */
 /**@{*/
-#define USE_KMEANS        (1 << 0)
-#define USE_COMMUNICATION (1 << 1)
-#define USE_HIERARCHICAL  (1 << 2)
+#define USE_COMMUNICATION (1 << 0)
+#define USE_HIERARCHICAL  (1 << 1)
 /**@}*/
 
 /* Program arguments. */
@@ -57,9 +56,9 @@ static void usage(void)
 	printf("Usage: mapper [options] --topology <height x width> --communication <filename>\n\n");
 	printf("Brief maps processes on a processor\n\n");
 	printf("Options:\n");
-	printf("    --hierarchical        use hierarchical mapping\n");
-	printf("    --kmeans <nclusters>  use kmeans strategy\n");
-	printf("    --verbose             be verbose\n");
+	printf("    --hierarchical          use hierarchical mapping\n");
+	printf("    --nclusters <nclusters> set number of clusters in kmeans\n");
+	printf("    --verbose               be verbose\n");
 	
 	exit(EXIT_SUCCESS);
 }
@@ -72,7 +71,7 @@ static void readargs(int argc, char **argv)
 	/* Parsing states. */
 	enum parsing_states {
 		STATE_READ_ARG,         /* Read argument.          */
-		STATE_SET_KMEANS,       /* Set kmeans parameters.  */
+		STATE_SET_NCLUSTERS,    /* Set kmeans parameters.  */
 		STATE_SET_TOPOLOGY,     /* Set topology file.      */
 		STATE_SET_COMMUNICATION /* Set communication file. */
 	};
@@ -91,8 +90,7 @@ static void readargs(int argc, char **argv)
 			switch (state)
 			{					
 				/* Set kmeans parameters. */
-				case STATE_SET_KMEANS:
-					flags |= USE_KMEANS;
+				case STATE_SET_NCLUSTERS:
 					nclusters = atoi(arg);
 					break;
 					
@@ -124,8 +122,8 @@ static void readargs(int argc, char **argv)
 			usage();
 		else if (!strcmp(arg, "--hierarchical"))
 			flags |= USE_HIERARCHICAL;
-		else if (!strcmp(arg, "--kmeans"))
-			state = STATE_SET_KMEANS;
+		else if (!strcmp(arg, "--nclusters"))
+			state = STATE_SET_NCLUSTERS;
 		else if(!strcmp(arg, "--topology"))
 			state = STATE_SET_TOPOLOGY;
 		else if (!strcmp(arg, "--communication"))
@@ -144,7 +142,7 @@ static void chkargs(void)
 		error("cannot open communication file");
 	if ((mesh.height == 0) || (mesh.width == 0))
 		error("bad processor's topology");
-	if ((flags & USE_KMEANS) && (nclusters == 0))
+	if ((flags & USE_HIERARCHICAL) && (nclusters == 0))
 		error("invalid kmeans parameters");
 }
 
@@ -157,7 +155,7 @@ static void chkargs(void)
  */
 static matrix_t read_communication_matrix(FILE *input)
 {
-	matrix_t m;         /* Communication matrix.        */
+	matrix_t m;    /* Communication matrix.        */
 	int size;      /* Size of communication.       */
 	int src, dest; /* Source and target processes. */
 	

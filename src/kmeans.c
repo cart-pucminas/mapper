@@ -62,7 +62,6 @@ static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
 	vector_t *centroids;   /* Centroids.           */
 	int procs_per_cluster; /* Gotcha?              */
 	
-	centroids = kmeans_centroids(procs, nprocs, map);
 	ncentroids = kmeans_count_centroids(map, nprocs);
 	
 	if (nprocs%nclusters)
@@ -70,6 +69,8 @@ static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
 		
 	if (ncentroids != nclusters)
 		error("bad number of centroids");
+		
+	centroids = kmeans_centroids(procs, nprocs, map);
 
 	procs_per_cluster = nprocs/nclusters;
 	
@@ -378,7 +379,6 @@ int *map_kmeans(const vector_t *procs, int nprocs, void *args)
 	if (hierarchical)
 	{
 		clustermap = kmeans_hierarchical(procs, nprocs);
-		
 		map = place(mesh, clustermap, nprocs, nprocs/2);
 	}
 	
