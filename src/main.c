@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 
 #include <mylib/matrix.h>
 #include <mylib/util.h>
@@ -42,6 +43,7 @@ static FILE *input = NULL;            /* Input file.           */
 static int nclusters = 0;             /* Number of clusters.   */
 static struct topology mesh = {0, 0}; /* Processor's topology. */
 bool verbose = false;                 /* Be verbose.           */
+unsigned seed = 0;                    /* Seed for randomness.  */
 
 /**
  * @brief Number of processes.
@@ -59,6 +61,7 @@ static void usage(void)
 	printf("    --help                  display this information\n");
 	printf("    --hierarchical          use hierarchical mapping\n");
 	printf("    --nclusters <nclusters> set number of clusters in kmeans\n");
+	printf("    --seed <value>          set sed value\n");
 	printf("    --verbose               be verbose\n");
 	
 	exit(EXIT_SUCCESS);
@@ -71,10 +74,11 @@ static void readargs(int argc, char **argv)
 {
 	/* Parsing states. */
 	enum parsing_states {
-		STATE_READ_ARG,      /* Read argument.          */
-		STATE_SET_NCLUSTERS, /* Set kmeans parameters.  */
-		STATE_SET_TOPOLOGY,  /* Set topology file.      */
-		STATE_SET_INPUT      /* Set input file.         */
+		STATE_READ_ARG,      /* Read argument.         */
+		STATE_SET_NCLUSTERS, /* Set kmeans parameters. */
+		STATE_SET_TOPOLOGY,  /* Set topology file.     */
+		STATE_SET_INPUT,     /* Set input file.        */
+		STATE_SET_SEED       /* Set seed value.        */
 	};
 	
 	int state;
@@ -108,6 +112,11 @@ static void readargs(int argc, char **argv)
 						input = fopen(arg, "r");
 					break;
 				
+				/* Set seed value. */
+				case STATE_SET_SEED:
+					sscanf(arg, "%u", &seed);
+					break;
+				
 				/* Wrong usage. */
 				default:
 					usage();
@@ -128,6 +137,8 @@ static void readargs(int argc, char **argv)
 			state = STATE_SET_TOPOLOGY;
 		else if (!strcmp(arg, "--input"))
 			state = STATE_SET_INPUT;
+		else if (!strcmp(arg, "--seed"))
+			state = STATE_SET_SEED;
 		else if (!strcmp(arg, "--verbose"))
 			verbose = true;
 	}
@@ -232,6 +243,8 @@ int main(int argc, char **argv)
 	nprocs = mesh.height*mesh.width;
 	
 	m = read_communication_matrix(input);
+	
+	srandnum(seed);
 	
 	/* Build strategy arguments. */
 	args.nclusters = nclusters;

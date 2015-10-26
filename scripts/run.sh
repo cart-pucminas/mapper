@@ -15,7 +15,7 @@ function run_kmeans
 {	
 	# Build command.
 	topology="--topology $2"
-	infile="--communication $INDIR/$3/$1.trace"
+	infile="--input $INDIR/$3/$1.trace"
 	if [ $4 == "y" ]; then
 		cmd="$MAPPER $topology $infile --hierarchical"
 	else
@@ -28,11 +28,6 @@ function run_kmeans
 	if [ $? == "0" ] ; then
 		echo "$4;$3;$1;${output//[[:blank:]]/}"
 	fi
-}
-
-function run_hierarchical_kmeans {
-	output=$(bin/mapper --verbose --topology $2 --communication $INDIR/$3/$1.trace \
-	--hierarchical  > /dev/null 2> stdout)
 }
 
 for kernel in CG EP FT IS MG; do
