@@ -64,9 +64,9 @@ function run_greedy
 	output=$(($cmd 1> /dev/null) 2>&1)
 	
 	# Print only valid output.
-#	if [ $? == "0" ] ; then
+	if [ $? == "0" ] ; then
 		echo "greedy;$3;$1;${output//[[:blank:]]/}"
-#	fi
+	fi
 }
 
 seeds=( 28 1013546 1013546 0 0 )
