@@ -33,8 +33,9 @@
  * @brief Program flags.
  */
 /**@{*/
-#define USE_COMMUNICATION (1 << 0)
-#define USE_HIERARCHICAL  (1 << 1)
+#define USE_KMEANS       (1 << 0)
+#define USE_HIERARCHICAL (1 << 1)
+#define USE_GREEDY       (1 << 2)
 /**@}*/
 
 /* Program arguments. */
@@ -58,11 +59,12 @@ static void usage(void)
 	printf("Usage: mapper [options] --topology <height>x<width> --input <filename>\n\n");
 	printf("Brief maps processes on a processor\n\n");
 	printf("Options:\n");
-	printf("    --help                  display this information\n");
-	printf("    --hierarchical          use hierarchical mapping\n");
-	printf("    --nclusters <nclusters> set number of clusters in kmeans\n");
-	printf("    --seed <value>          set sed value\n");
-	printf("    --verbose               be verbose\n");
+	printf("    --greedy             use greedy strategy\n");
+	printf("    --help               display this information\n");
+	printf("    --hierarchical       use hierarchical mapping\n");
+	printf("    --kmeans <nclusters> use kmeans strategy\n");
+	printf("    --seed <value>       set sed value\n");
+	printf("    --verbose            be verbose\n");
 	
 	exit(EXIT_SUCCESS);
 }
@@ -75,10 +77,11 @@ static void readargs(int argc, char **argv)
 	/* Parsing states. */
 	enum parsing_states {
 		STATE_READ_ARG,      /* Read argument.         */
-		STATE_SET_NCLUSTERS, /* Set kmeans parameters. */
+		STATE_SET_KMEANS,    /* Set kmeans parameters. */
 		STATE_SET_TOPOLOGY,  /* Set topology file.     */
 		STATE_SET_INPUT,     /* Set input file.        */
-		STATE_SET_SEED       /* Set seed value.        */
+		STATE_SET_SEED,      /* Set seed value.        */
+		STATE_SET_GREEDY     /* Set greedy strategy.   */
 	};
 	
 	int state;
@@ -95,7 +98,8 @@ static void readargs(int argc, char **argv)
 			switch (state)
 			{					
 				/* Set kmeans parameters. */
-				case STATE_SET_NCLUSTERS:
+				case STATE_SET_KMEANS:
+					flags |= USE_KMEANS;
 					nclusters = atoi(arg);
 					break;
 					
@@ -131,8 +135,8 @@ static void readargs(int argc, char **argv)
 			usage();
 		else if (!strcmp(arg, "--hierarchical"))
 			flags |= USE_HIERARCHICAL;
-		else if (!strcmp(arg, "--nclusters"))
-			state = STATE_SET_NCLUSTERS;
+		else if (!strcmp(arg, "--kmeans"))
+			state = STATE_SET_KMEANS;
 		else if(!strcmp(arg, "--topology"))
 			state = STATE_SET_TOPOLOGY;
 		else if (!strcmp(arg, "--input"))
@@ -141,6 +145,8 @@ static void readargs(int argc, char **argv)
 			state = STATE_SET_SEED;
 		else if (!strcmp(arg, "--verbose"))
 			verbose = true;
+		else if (!strcmp(arg, "--greedy"))
+			flags |= USE_GREEDY;
 	}
 }
 
@@ -153,7 +159,7 @@ static void chkargs(void)
 		error("cannot open input file");
 	if ((proc.height == 0) || (proc.width == 0))
 		error("bad processor's dimensions");
-	if (!(flags & USE_HIERARCHICAL) && (nclusters == 0))
+	if ((flags & USE_KMEANS) && (nclusters == 0))
 		error("invalid kmeans parameters");
 }
 
@@ -294,6 +300,7 @@ int main(int argc, char **argv)
 {
 	int *map;
 	matrix_t m;
+	int strategyid;
 	struct kmeans_args args;
 	
 	readargs(argc, argv);
@@ -308,11 +315,26 @@ int main(int argc, char **argv)
 	srandnum(seed);
 	
 	/* Build strategy arguments. */
-	args.nclusters = nclusters;
-	args.proc = &proc;
-	args.hierarchical = (flags & USE_HIERARCHICAL) ? 1 : 0;
+	if (flags & USE_KMEANS)
+	{
+		strategyid = STRATEGY_KMEANS;
+		args.nclusters = nclusters;
+		args.proc = &proc;
+		args.hierarchical = 0;
+	}
+	else if (flags & USE_HIERARCHICAL)
+	{
+		strategyid = STRATEGY_KMEANS;
+		args.proc = &proc;
+		args.hierarchical = 1;
+	}
+	else
+	{
+		strategyid = STRATEGY_GREEDY;
+		args.proc = &proc;
+	}
 	
-	map = process_map(m, STRATEGY_KMEANS, &args);
+	map = process_map(m, strategyid, &args);
 	
 	/* Print map. */
 	for (int i = 0; i < nprocs; i++)
