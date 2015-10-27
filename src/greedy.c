@@ -203,7 +203,7 @@ static int best_neighbor_core
 	for (int i = 0; i < proc->ncores; i++)
 	{
 		if (proc->topology[coreid][i])
-			queue_enqueue(tasks, task_create(proc->topology[coreid][i], 1));
+			queue_enqueue(tasks, task_create(coreid, 1));
 	}
 	
 	/* Look for the best neighbor core. */
@@ -225,10 +225,7 @@ static int best_neighbor_core
 		for (int i = 0; i < proc->ncores; i++)
 		{
 			if (proc->topology[t->coreid][i])
-			{
-				queue_enqueue(tasks, 
-					task_create(proc->topology[t->coreid][i], t->radius + 1));
-			}
+				queue_enqueue(tasks, task_create(i, t->radius + 1));
 		}
 		
 		/* Skip cores that are in use. */
@@ -262,6 +259,7 @@ static int best_neighbor_core
 	/* House keeping. */
 	while (!queue_empty(tasks))
 		task_destroy(queue_dequeue(tasks));
+	queue_destroy(tasks);
 	free(visited);
 	
 	return (best_coreid);

@@ -29,11 +29,12 @@
 
 /* Forward definitions. */
 extern int *map_kmeans(const vector_t *, int, void *);
+extern int *map_greedy(const vector_t *, int, void *);
 
 /**
  * @brief Number of mapping strategies.
  */
-#define NR_STRATEGIES 1
+#define NR_STRATEGIES 2
 
 /**
  * @brief Mapping strategy.
@@ -44,7 +45,8 @@ typedef int *(*strategy)(const vector_t *, int, void *);
  * @brief Mapping strategies.
  */
 static strategy strategies[NR_STRATEGIES] =  {
-	map_kmeans
+	map_kmeans,
+	map_greedy
 };
 
 /**
@@ -76,7 +78,7 @@ int *process_map(matrix_t communication, int strategy, void *args)
 			vector_set(procs[i], j, (a > 0) ? 1.0/a : a);
 		}
 	}
-
+	
 	map = strategies[strategy](procs, nprocs, args);
 
 	/* House keeping. */

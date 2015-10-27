@@ -301,7 +301,9 @@ int main(int argc, char **argv)
 	int *map;
 	matrix_t m;
 	int strategyid;
-	struct kmeans_args args;
+	void *args;
+	struct kmeans_args kmeans_args;
+	struct greedy_args greedy_args;
 	
 	readargs(argc, argv);
 	chkargs();
@@ -318,23 +320,26 @@ int main(int argc, char **argv)
 	if (flags & USE_KMEANS)
 	{
 		strategyid = STRATEGY_KMEANS;
-		args.nclusters = nclusters;
-		args.proc = &proc;
-		args.hierarchical = 0;
+		kmeans_args.nclusters = nclusters;
+		kmeans_args.proc = &proc;
+		kmeans_args.hierarchical = 0;
+		args = &kmeans_args;
 	}
 	else if (flags & USE_HIERARCHICAL)
 	{
 		strategyid = STRATEGY_KMEANS;
-		args.proc = &proc;
-		args.hierarchical = 1;
+		kmeans_args.proc = &proc;
+		kmeans_args.hierarchical = 1;
+		args = &kmeans_args;
 	}
 	else
 	{
 		strategyid = STRATEGY_GREEDY;
-		args.proc = &proc;
+		greedy_args.proc = &proc;
+		args = &greedy_args;
 	}
 	
-	map = process_map(m, strategyid, &args);
+	map = process_map(m, strategyid, args);
 	
 	/* Print map. */
 	for (int i = 0; i < nprocs; i++)
