@@ -47,16 +47,22 @@
 	};
 	
 	/**
+	 * @brief Greedy strategy arguments.
+	 */
+	struct greedy_args
+	{
+		struct processor *proc; /**< Mesh topology. */
+	};
+	
+	/**
 	 * @brief Mapping strategies.
 	 */
 	/**@{*/
 	#define STRATEGY_KMEANS 0 /**< Kmeans strategy. */
+	#define STRATEGY_GREEDY 1 /**< Greedy strategy. */
 	/**@}*/
 
 	/* Forward definitions. */
 	extern int *process_map(matrix_t, int, void *);
-	
-	/* Forward definitions. */
-	extern bool verbose;
 
 #endif /* MAPPER_H_ */

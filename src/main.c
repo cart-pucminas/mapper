@@ -42,8 +42,8 @@ static unsigned flags = 0;                            /* Argument flags.       *
 static FILE *input = NULL;                            /* Input file.           */
 static int nclusters = 0;                             /* Number of clusters.   */
 static struct processor proc = {0, 0, 0, NULL, NULL}; /* Processor's topology. */
-bool verbose = false;                                 /* Be verbose.           */
-unsigned seed = 0;                                    /* Seed for randomness.  */
+static bool verbose = false;                          /* Be verbose.           */
+static unsigned seed = 0;                             /* Seed for randomness.  */
 
 /**
  * @brief Number of processes.
