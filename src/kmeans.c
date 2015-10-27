@@ -247,27 +247,27 @@ static void table_split(struct table *t, int size)
 /**
  * @brief Places processes in the processor.
  * 
- * @param mesh       Processor's topology.
+ * @param proc       Processor's information.
  * @param clustermap Process map.
  * @param nprocs     Number of processes.
  * 
  * @returns Process map.
  */
 static int *place
-(struct topology *mesh, int *clustermap, int nprocs, int nclusters)
+(struct processor *proc, int *clustermap, int nprocs, int nclusters)
 {
 	int *map;               /* Process map.        */
 	struct table *clusters;	/* Clustered topology. */
 	
 	map = smalloc(nprocs*sizeof(int));
-	clusters = table_create(&integer, mesh->height, mesh->width);
+	clusters = table_create(&integer, proc->height, proc->width);
 	
 	table_split(clusters, nprocs/nclusters);
 	
 	/* Place processes in the processor. */
-	for (int i = 0; i < mesh->height; i++)
+	for (int i = 0; i < proc->height; i++)
 	{
-		for (int j = 0; j < mesh->width; j++)
+		for (int j = 0; j < proc->width; j++)
 		{
 			int c;
 			
@@ -277,7 +277,7 @@ static int *place
 				if (clustermap[k] == c)
 				{
 					clustermap[k] = -1;
-					map[k] = i*mesh->width + j;
+					map[k] = i*proc->width + j;
 					break;
 				}
 			}
@@ -285,9 +285,9 @@ static int *place
 	}
 	
 	/* House keeping. */
-	for (int i = 0; i < mesh->height; i++)
+	for (int i = 0; i < proc->height; i++)
 	{
-		for (int j = 0; j < mesh->width; j++)
+		for (int j = 0; j < proc->width; j++)
 			free(table_get(clusters, i, j));
 	}
 	table_destroy(clusters);
@@ -433,43 +433,42 @@ static int *kmeans_hierarchical(const vector_t *data, int npoints)
 /**
  * @brief Maps processes using kmeans algorithm.
  *
- * @param procs       Processes.
- * @param nprocs      Number of processes.
- * @param nclusters   Number of clusters.
- * @param use_auction Use auction balancer?
+ * @param procs  Processes.
+ * @param nprocs Number of processes.
+ * @param args   Additional arguments.
  *
  * @returns A process map.
  */
 int *map_kmeans(const vector_t *procs, int nprocs, void *args)
 {
-	int *map;              /* Process map.           */
-	int *clustermap;       /* Balanced cluster map.  */
-	int nclusters;         /* Number of clusters.    */
-	int hierarchical;      /* Hierarchical mapping?  */
-	struct topology *mesh; /* Processor's topology.  */
+	int *map;               /* Process map.           */
+	int *clustermap;        /* Balanced cluster map.  */
+	int nclusters;          /* Number of clusters.    */
+	int hierarchical;       /* Hierarchical mapping?  */
+	struct processor *proc; /* Processor's topology.  */
 	
 	/* Extract arguments. */
 	hierarchical = ((struct kmeans_args *)args)->hierarchical;
 	nclusters = ((struct kmeans_args *)args)->nclusters;
-	mesh = ((struct kmeans_args *)args)->mesh;
+	proc = ((struct kmeans_args *)args)->proc;
 	
 	/* Sanity check. */
 	if (!hierarchical)
 		assert(nclusters > 0);
-	assert(nprocs == (mesh->height*mesh->width));
+	assert(nprocs == (proc->height*proc->width));
 
 	/* Hierarchical kmeans. */
 	if (hierarchical)
 	{
 		clustermap = kmeans_hierarchical(procs, nprocs);
-		map = place(mesh, clustermap, nprocs, nprocs/2);
+		map = place(proc, clustermap, nprocs, nprocs/2);
 	}
 	
 	/* Standard kmeans. */
 	else
 	{
 		clustermap = kmeans_balanced(procs, nprocs, nclusters);
-		map = place(mesh, clustermap, nprocs, nclusters);
+		map = place(proc, clustermap, nprocs, nclusters);
 	}
 	
 	/* House keeping. */

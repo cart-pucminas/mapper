@@ -27,10 +27,13 @@
 	/**
 	 * @brief Processor's topology.
 	 */
-	struct topology
+	struct processor
 	{
-		int height; /**< Mesh height. */
-		int width;  /**< Mesh width.  */
+		int height;     /**< Mesh height.              */
+		int width;      /**< Mesh width.               */
+		int ncores;     /**< Number of cores.          */
+		int **topology; /**< Processor's topology.     */
+		int *nlinks;    /**< Number of links per core. */
 	};
 	
 	/**
@@ -38,9 +41,9 @@
 	 */
 	struct kmeans_args
 	{
-		int nclusters;         /**< Number of clusters.   */
-		struct topology *mesh; /**< Mesh topology.        */
-		int hierarchical : 1;  /**< Hierarchical mapping? */
+		int nclusters;          /**< Number of clusters.   */
+		struct processor *proc; /**< Mesh topology.        */
+		int hierarchical : 1;   /**< Hierarchical mapping? */
 	};
 	
 	/**

@@ -38,12 +38,12 @@
 /**@}*/
 
 /* Program arguments. */
-static unsigned flags = 0;            /* Argument flags.       */
-static FILE *input = NULL;            /* Input file.           */
-static int nclusters = 0;             /* Number of clusters.   */
-static struct topology mesh = {0, 0}; /* Processor's topology. */
-bool verbose = false;                 /* Be verbose.           */
-unsigned seed = 0;                    /* Seed for randomness.  */
+static unsigned flags = 0;                            /* Argument flags.       */
+static FILE *input = NULL;                            /* Input file.           */
+static int nclusters = 0;                             /* Number of clusters.   */
+static struct processor proc = {0, 0, 0, NULL, NULL}; /* Processor's topology. */
+bool verbose = false;                                 /* Be verbose.           */
+unsigned seed = 0;                                    /* Seed for randomness.  */
 
 /**
  * @brief Number of processes.
@@ -101,7 +101,7 @@ static void readargs(int argc, char **argv)
 					
 				/* Set topology file. */
 				case STATE_SET_TOPOLOGY:
-					sscanf(arg, "%u%*c%u", &mesh.height, &mesh.width);
+					sscanf(arg, "%u%*c%u", &proc.height, &proc.width);
 					break;
 				
 				/* Set input file. */
@@ -151,8 +151,8 @@ static void chkargs(void)
 {
 	if (input == NULL)
 		error("cannot open input file");
-	if ((mesh.height == 0) || (mesh.width == 0))
-		error("bad processor's topology");
+	if ((proc.height == 0) || (proc.width == 0))
+		error("bad processor's dimensions");
 	if (!(flags & USE_HIERARCHICAL) && (nclusters == 0))
 		error("invalid kmeans parameters");
 }
@@ -184,16 +184,75 @@ static matrix_t read_communication_matrix(FILE *input)
 }
 
 /**
+ * @brief Returns the core ID of a processor.
+ * 
+ * @param i Vertical location.
+ * @param j Horizontal location.
+ * 
+ * @returns The core ID of a processor.
+ */
+static inline int processor_coreid(int i, int j)
+{
+	return (i*proc.width + j);
+}
+
+/**
+ * @brief Setups processor.
+ */
+static void processor_setup(void)
+{
+	proc.ncores = proc.height*proc.width;
+	
+	/* Allocate topology. */
+	proc.topology = smalloc(proc.ncores*sizeof(int *));
+	for (int i = 0; i < proc.ncores; i++)
+		proc.topology[i] = scalloc(proc.ncores, sizeof(int));
+	
+	/* Allocate nlinks. */
+	proc.nlinks = scalloc(proc.ncores, sizeof(int));
+	
+	/* Setup. */
+	for (int i = 0; i < proc.height; i++)
+	{
+		for (int j = 0; j < proc.width; j++)
+		{
+			int id;
+			
+			id = processor_coreid(i, j);
+			
+			if ((i - 1) >= 0)
+				proc.topology[id][processor_coreid(i-1,j)]=1, proc.nlinks[id]++;
+			if ((i + 1) < proc.height)
+				proc.topology[id][processor_coreid(i+1,j)]=1, proc.nlinks[id]++;
+			if ((j - 1) >= 0)
+				proc.topology[id][processor_coreid(i,j-1)]=1, proc.nlinks[id]++;
+			if ((j + 1) < proc.width)
+				proc.topology[id][processor_coreid(i,j+1)]=1, proc.nlinks[id]++;
+		}
+	}
+}
+
+/**
+ * @brief Destroys processor.
+ */
+static void processor_destroy(void)
+{
+	for (int i = 0; i < proc.height; i++)
+		free(proc.topology[i]);
+	free(proc.topology);
+	free(proc.nlinks);
+}
+
+/**
  * @brief Evaluates how good a process map is.
  * 
  * @param map     Process map.
  * @param nprocs  Number of processes.
  * @param traffic Communication matrix.
- * @param mesh    Processor's topology.
  * 
  * @returns Process map fitness.
  */
-static double evaluate(int *map, int nprocs, matrix_t traffic, struct topology *mesh)
+static double evaluate(int *map, int nprocs, matrix_t traffic)
 {
 	double fitness;
 	
@@ -214,12 +273,12 @@ static double evaluate(int *map, int nprocs, matrix_t traffic, struct topology *
 			if (j == i)
 				continue;
 		
-			distance = (map[i]/mesh->width > map[j]/mesh->width) ?
-						map[i]/mesh->width - map[j]/mesh->width :
-						map[j]/mesh->width - map[i]/mesh->width +
-					   (map[i]%mesh->width > map[j]%mesh->width) ?
-					    map[i]%mesh->width - map[j]%mesh->width :
-					    map[j]%mesh->width - map[i]%mesh->width;
+			distance = (map[i]/proc.width > map[j]/proc.width) ?
+						map[i]/proc.width - map[j]/proc.width :
+						map[j]/proc.width - map[i]/proc.width +
+					   (map[i]%proc.width > map[j]%proc.width) ?
+					    map[i]%proc.width - map[j]%proc.width :
+					    map[j]%proc.width - map[i]%proc.width;
 						
 			fitness += distance*matrix_get(traffic, i, j);
 		}
@@ -240,7 +299,9 @@ int main(int argc, char **argv)
 	readargs(argc, argv);
 	chkargs();
 	
-	nprocs = mesh.height*mesh.width;
+	processor_setup();
+	
+	nprocs = proc.height*proc.width;
 	
 	m = read_communication_matrix(input);
 	
@@ -248,7 +309,7 @@ int main(int argc, char **argv)
 	
 	/* Build strategy arguments. */
 	args.nclusters = nclusters;
-	args.mesh = &mesh;
+	args.proc = &proc;
 	args.hierarchical = (flags & USE_HIERARCHICAL) ? 1 : 0;
 	
 	map = process_map(m, STRATEGY_KMEANS, &args);
@@ -257,11 +318,12 @@ int main(int argc, char **argv)
 	for (int i = 0; i < nprocs; i++)
 		printf("%3u %d\n", i, map[i]);
 	if (verbose)
-		fprintf(stderr, " %lf\n", evaluate(map, nprocs, m, &mesh));
+		fprintf(stderr, " %lf\n", evaluate(map, nprocs, m));
 	
 	/* House keeping. */
 	free(map);
 	matrix_destroy(m);
+	processor_destroy();
 	fclose(input);
 	
 	return (0);

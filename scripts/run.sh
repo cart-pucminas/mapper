@@ -4,8 +4,6 @@ INDIR=examples
 NCLUSTERS=4
 MAPPER="bin/mapper --verbose"
 
-found="yes"
-
 #
 # Run kmeans strategy.
 #  $1 Number of processes.
@@ -29,35 +27,20 @@ function run_kmeans
 	
 	# Print only valid output.
 	if [ $? == "0" ] ; then
-		echo "$4;$3;$1;${output//[[:blank:]]/}" > /dev/null
-	else
-		found="no"
+		echo "$4;$3;$1;${output//[[:blank:]]/}"
 	fi
 }
 
-seeds=( 28 X X 0 0 )
+seeds=( 28 1013546 1013546 0 0 )
 kernels=( CG EP FT IS MG )
 
-for i in 1 2; do
-	for j in {0..1000000}; do
-		found="yes"
-		run_kmeans 32    4x8 ${kernels[$i]} n $j
-		if [ $found == "no" ]; then continue; fi
-		run_kmeans 32    4x8 ${kernels[$i]} y $j
-		if [ $found == "no" ]; then continue; fi
-		run_kmeans 64    8x8 ${kernels[$i]} n $j
-		if [ $found == "no" ]; then continue; fi
-		run_kmeans 64    8x8 ${kernels[$i]} y $j
-		if [ $found == "no" ]; then continue; fi
-		run_kmeans 128  8x16 ${kernels[$i]} n $j
-		if [ $found == "no" ]; then continue; fi
-		run_kmeans 128  8x16 ${kernels[$i]} y $j
-		if [ $found == "no" ]; then continue; fi
-		run_kmeans 256 16x16 ${kernels[$i]} n $j
-		if [ $found == "no" ]; then continue; fi
-		run_kmeans 256 16x16 ${kernels[$i]} y $j
-		if [ $found == "no" ]; then continue; fi
-		echo found $j for ${kernels[$i]}
-		break
-	done
+for i in {0..4}; do
+	run_kmeans 32    4x8 ${kernels[$i]} n ${seeds[$i]}
+	run_kmeans 32    4x8 ${kernels[$i]} y ${seeds[$i]}
+	run_kmeans 64    8x8 ${kernels[$i]} n ${seeds[$i]}
+	run_kmeans 64    8x8 ${kernels[$i]} y ${seeds[$i]}
+	run_kmeans 128  8x16 ${kernels[$i]} n ${seeds[$i]}
+	run_kmeans 128  8x16 ${kernels[$i]} y ${seeds[$i]}
+	run_kmeans 256 16x16 ${kernels[$i]} n ${seeds[$i]}
+	run_kmeans 256 16x16 ${kernels[$i]} y ${seeds[$i]}
 done
