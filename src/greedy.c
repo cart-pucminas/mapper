@@ -244,19 +244,29 @@ static int best_neighbor_core
 		
 		/* Done. */
 		if (t->radius > best->radius)
+		{
+			task_destroy(t);
 			break;
+		}
 		
 		/* Best core found. */
 		if (t->radius == best->radius)
 		{
 			if (proc->nlinks[t->coreid] > proc->nlinks[best->coreid])
+			{
+				task_destroy(best);
 				best = t;
+				continue;
+			}
 		}
+		
+		task_destroy(t);
 	}
 	
 	best_coreid = best->coreid;
 	
 	/* House keeping. */
+	task_destroy(best);
 	while (!queue_empty(tasks))
 		task_destroy(queue_dequeue(tasks));
 	queue_destroy(tasks);

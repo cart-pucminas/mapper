@@ -243,10 +243,10 @@ static void processor_setup(void)
  */
 static void processor_destroy(void)
 {
-	for (int i = 0; i < proc.height; i++)
+	free(proc.nlinks);
+	for (int i = 0; i < proc.ncores; i++)
 		free(proc.topology[i]);
 	free(proc.topology);
-	free(proc.nlinks);
 }
 
 /**
@@ -307,9 +307,9 @@ int main(int argc, char **argv)
 	
 	readargs(argc, argv);
 	chkargs();
-	
+
 	processor_setup();
-	
+
 	nprocs = proc.height*proc.width;
 	
 	m = read_communication_matrix(input);
