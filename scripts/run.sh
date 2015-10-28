@@ -25,6 +25,7 @@ OUTDIR=output
 # Tools.
 MAP2NAS="$BINDIR/map2nas"
 MAPPER="$BINDIR/mapper --verbose"
+NAS2TPZ="$BINDIR/nas2tpz"
 
 # Script parameters.
 INSTRUMENT=$1 # Instrument NAS trace file? 
@@ -42,6 +43,7 @@ function run_kmeans
 	tracefile="$INDIR/$3/$1.trace"
 	mapfile="$OUTDIR/kmeans-$1-$3.map"
 	nasfile="$OUTDIR/kmeans-$1-$3.trace"
+	tpzfile="$OUTDIR/greedy-$1-$3.tpz.trace"
 	
 	cut -d" " -f2- $tracefile > input
 	
@@ -60,6 +62,7 @@ function run_kmeans
 	# Instrument NAS file.
 	if [ $INSTRUMENT == "yes" ]; then
 		$MAP2NAS $tracefile $mapfile > $nasfile
+		$NAS2TPZ $nasfile $1 $2 > $tpzfile
 	fi
 	
 	# House keeping.
@@ -78,6 +81,7 @@ function run_hierarchical
 	tracefile="$INDIR/$3/$1.trace"
 	mapfile="$OUTDIR/hierarchical-$1-$3.map"
 	nasfile="$OUTDIR/hierarchical-$1-$3.trace"
+	tpzfile="$OUTDIR/greedy-$1-$3.tpz.trace"
 	
 	cut -d" " -f2- $tracefile > input
 	
@@ -96,6 +100,7 @@ function run_hierarchical
 	# Instrument NAS file.
 	if [ $INSTRUMENT == "yes" ]; then
 		$MAP2NAS $tracefile $mapfile > $nasfile
+		$NAS2TPZ $nasfile $1 $2 > $tpzfile
 	fi
 	
 	# House keeping.
@@ -113,6 +118,7 @@ function run_greedy
 	tracefile="$INDIR/$3/$1.trace"
 	mapfile="$OUTDIR/greedy-$1-$3.map"
 	nasfile="$OUTDIR/greedy-$1-$3.trace"
+	tpzfile="$OUTDIR/greedy-$1-$3.tpz.trace"
 	
 	cut -d" " -f2- $tracefile > input
 	
@@ -131,6 +137,7 @@ function run_greedy
 	# Instrument NAS file.
 	if [ $INSTRUMENT == "yes" ]; then
 		$MAP2NAS $tracefile $mapfile > $nasfile
+		$NAS2TPZ $nasfile $1 $2 > $tpzfile
 	fi
 	
 	# House keeping.
