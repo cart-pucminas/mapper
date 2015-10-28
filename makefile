@@ -45,7 +45,7 @@ export CFLAGS += -I $(INCDIR)
 .PHONY: tools
 
 # Builds mapper.
-all: lib
+all: lib tools
 	cd $(SRCDIR) && $(MAKE) all
 
 # Builds library.

@@ -18,7 +18,11 @@
 .PHONY: trace-parser
 
 # Builds all tools.
-all: nas2tpz trace-packer trace-parser
+all: nas2tpz trace-packer trace-parser map2nas
+
+# Builds NAS trace instrumentation tool.
+map2nas: map2nas.c
+	$(CC) $(CFLAGS) map2nas.c -o $(BINDIR)/map2nas $(LIBS)
 
 # Builds NPB to TOPAZ trace conversor.
 nas2tpz: nas2tpz.c
