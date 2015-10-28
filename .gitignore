@@ -10,6 +10,7 @@ include/mylib
 *.swp
 *.pdf
 *.trace
+input
 output/*
 
 # Exceptions.

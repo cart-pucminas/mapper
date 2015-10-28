@@ -77,7 +77,7 @@ static void nas2tpz(FILE *nasfilep)
  */
 static void usage(void)
 {
-	printf("Usage: nas2tpz <nas file> <nprocs> <nrows> <ncols>\n");
+	printf("Usage: nas2tpz <nas file> <nprocs> <height>x<width>\n");
 	printf("Brief: converts a NAS trace file to a Topaz input file.\n");
 	exit(EXIT_SUCCESS);
 }
@@ -88,13 +88,12 @@ static void usage(void)
 static void readargs(int argc, char **argv)
 {	
 	/* Missing arguments. */
-	if (argc != 5)
+	if (argc != 4)
 		usage();
 		
 	nasfile = argv[1];
 	sscanf(argv[2], "%u", &topology.nprocs);
-	sscanf(argv[3], "%u", &topology.nrows);
-	sscanf(argv[4], "%u", &topology.ncols);
+	sscanf(argv[3], "%u%*c%u", &topology.nrows, &topology.ncols);
 	
 	/* Bad topology. */
 	if (topology.nrows*topology.ncols != topology.nprocs)
