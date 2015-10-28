@@ -38,6 +38,7 @@ trace-parser: trace-parser/*.c
 
 # Cleans compilation files.
 clean:
+	rm -f $(BINDIR)/map2nas
 	rm -f $(BINDIR)/nas2tpz
 	rm -f $(BINDIR)/trace-packer
 	rm -f $(BINDIR)/trace-parser

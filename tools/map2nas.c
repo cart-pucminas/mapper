@@ -68,9 +68,9 @@ static void map2nas(FILE *nasfile, FILE *mapfile)
 		int coreid[2];
 		
 		if ((coreid[0] = find_coreid(mapfile, src)) < 0)
-			error("source thread not found");
+			error("source thread %d not found", src);
 		if ((coreid[1] = find_coreid(mapfile, dest)) < 0)
-			error("destination thread not fond");
+			error("destination thread %d not fond", dest);
 		
 		printf("%f %d %d %d\n", start, coreid[0], coreid[1], size);
 	}

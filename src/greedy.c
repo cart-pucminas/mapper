@@ -102,7 +102,7 @@ static int best_neighbor_thread(vector_t thread, int *map, int nthreads)
 	for (int i = 0; i < nthreads; i++)
 	{
 		/* Skip mapped threads. */
-		if (map[i] > 0)
+		if (map[i] >= 0)
 			continue;
 		
 		/* First non-mapped thread. */
@@ -191,19 +191,29 @@ static int best_neighbor_core
 (const struct processor *proc, int *map, int nthreads, int coreid)
 {
 	int best_coreid;   /* ID of best core.  */
-	int *visited;      /* Visited cores.    */
+	int *states;       /* Processing state. */
 	struct task *best; /* Best processor.   */
 	struct task *t;    /* Working task.     */
 	queue_t tasks;     /* Tasks to process. */
 	
-	visited = scalloc(proc->ncores, sizeof(int));
+	/* Processing states. */
+	enum states {NOT_VISITED, VISITING, VISITED};
+	
 	tasks = queue_create(NULL);
+	
+	/* Initialize processing states. */
+	states = smalloc(proc->ncores*sizeof(int));
+	for (int i = 0; i < proc->ncores; i++)
+		states[i] = NOT_VISITED;
 	
 	/* Enqueue all neighbors. */
 	for (int i = 0; i < proc->ncores; i++)
 	{
 		if (proc->topology[coreid][i])
+		{
+			states[i] = VISITING;
 			queue_enqueue(tasks, task_create(coreid, 1));
+		}
 	}
 	
 	/* Look for the best neighbor core. */
@@ -212,21 +222,17 @@ static int best_neighbor_core
 	{
 		t = queue_dequeue(tasks);
 		
-		/* Skip visited cores. */
-		if (visited[t->coreid])
-		{
-			task_destroy(t);
-			continue;
-		}
-		
-		visited[t->coreid] = 1;
-		
 		/* Enqueue all neighbors. */
 		for (int i = 0; i < proc->ncores; i++)
 		{
 			if (proc->topology[t->coreid][i])
+			{
+				states[i] = VISITING;
 				queue_enqueue(tasks, task_create(i, t->radius + 1));
+			}
 		}
+		
+		states[t->coreid] = VISITED;
 		
 		/* Skip cores that are in use. */
 		if (core_in_use(map, nthreads, t->coreid))
@@ -270,7 +276,7 @@ static int best_neighbor_core
 	while (!queue_empty(tasks))
 		task_destroy(queue_dequeue(tasks));
 	queue_destroy(tasks);
-	free(visited);
+	free(states);
 	
 	return (best_coreid);
 }
