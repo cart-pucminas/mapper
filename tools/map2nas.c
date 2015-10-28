@@ -72,7 +72,7 @@ static void map2nas(FILE *nasfile, FILE *mapfile)
 		if ((coreid[1] = find_coreid(mapfile, dest)) < 0)
 			error("destination thread not fond");
 		
-		printf("%f %d %d %d", start, coreid[0], coreid[1], size);
+		printf("%f %d %d %d\n", start, coreid[0], coreid[1], size);
 	}
 }
 
@@ -89,11 +89,11 @@ int main(int argc, char **argv)
 		usage();
 	
 	/* Open map file. */
-	if ((mapfile = fopen(argv[1], "r")) == NULL)
+	if ((nasfile = fopen(argv[1], "r")) == NULL)
 		error("cannot open NAS trace file");
 	
 	/* Open NAS trace file. */
-	if ((nasfile = fopen(argv[2], "r")) == NULL)
+	if ((mapfile = fopen(argv[2], "r")) == NULL)
 		error("cannot open NAS trace file");
 	
 	map2nas(nasfile, mapfile);
