@@ -395,24 +395,48 @@ static int *kmeans_hierarchical(const vector_t *data, int npoints)
 /**
  * @brief Maps processes using kmeans algorithm.
  *
- * @param procs  Processes.
- * @param nprocs Number of processes.
- * @param args   Additional arguments.
+ * @param communication Communication matrix.
+ * @param args          Additional arguments.
  *
  * @returns A process map.
  */
-int *map_kmeans(const vector_t *procs, int nprocs, void *args)
+int *map_kmeans(matrix_t communication, void *args)
 {
 	int *map;               /* Process map.           */
 	int *clustermap;        /* Balanced cluster map.  */
 	int nclusters;          /* Number of clusters.    */
 	int hierarchical;       /* Hierarchical mapping?  */
 	struct processor *proc; /* Processor's topology.  */
+	int nprocs;             /* Number of processes.   */
+	vector_t *procs;        /* Processes.             */
+	
+	/* Sanity check. */
+	assert(communication != NULL);
+	assert(args != NULL);
 	
 	/* Extract arguments. */
 	hierarchical = ((struct kmeans_args *)args)->hierarchical;
 	nclusters = ((struct kmeans_args *)args)->nclusters;
 	proc = ((struct kmeans_args *)args)->proc;
+	
+	nprocs = matrix_height(communication);
+	
+	/* Create processes. */
+	procs = smalloc(nprocs*sizeof(vector_t));
+	for (int i = 0; i < nprocs; i++)
+	{
+		procs[i] = vector_create(nprocs);
+		for (int j = 0; j < nprocs; j++)
+		{			
+			double a;
+			
+			a = matrix_get(communication, i, j);
+			if (hierarchical)
+				vector_set(procs[i], j, (a > 0) ? 1.0/a : a);
+			else
+				vector_set(procs[i], j, a);
+		}
+	}
 	
 	/* Sanity check. */
 	if (!hierarchical)
@@ -435,6 +459,9 @@ int *map_kmeans(const vector_t *procs, int nprocs, void *args)
 	
 	/* House keeping. */
 	free(clustermap);
+	for (int i = 0; i < nprocs; i++)
+		vector_destroy(procs[i]);
+	free(procs);
 	
 	return (map);
 }

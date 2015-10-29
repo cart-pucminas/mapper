@@ -28,8 +28,8 @@
 #include "mapper.h"
 
 /* Forward definitions. */
-extern int *map_kmeans(const vector_t *, int, void *);
-extern int *map_greedy(const vector_t *, int, void *);
+extern int *map_kmeans(matrix_t, void *);
+extern int *map_greedy(matrix_t, void *);
 
 /**
  * @brief Number of mapping strategies.
@@ -39,7 +39,7 @@ extern int *map_greedy(const vector_t *, int, void *);
 /**
  * @brief Mapping strategy.
  */
-typedef int *(*strategy)(const vector_t *, int, void *);
+typedef int *(*strategy)(matrix_t, void *);
 
 /**
  * @brief Mapping strategies.
@@ -54,9 +54,7 @@ static strategy strategies[NR_STRATEGIES] =  {
  */
 int *process_map(matrix_t communication, int strategy, void *args)
 {
-	int *map;        /* Map.                 */
-	int nprocs;      /* Number of processes. */
-	vector_t *procs; /* Processes.           */
+	int *map;
 	
 	/* Sanity check. */
 	assert(communication != NULL);
@@ -64,27 +62,7 @@ int *process_map(matrix_t communication, int strategy, void *args)
 	assert(strategy < NR_STRATEGIES);
 	assert(args != NULL);
 	
-	nprocs = matrix_height(communication);
-	
-	/* Create processes. */
-	procs = smalloc(nprocs*sizeof(vector_t));
-	for (int i = 0; i < nprocs; i++)
-	{
-		procs[i] = vector_create(nprocs);
-		for (int j = 0; j < nprocs; j++)
-		{
-			double a;
-			a = matrix_get(communication, i, j);
-			vector_set(procs[i], j, (a > 0) ? 1.0/a : a);
-		}
-	}
-	
-	map = strategies[strategy](procs, nprocs, args);
-
-	/* House keeping. */
-	for (int i = 0; i < nprocs; i++)
-		vector_destroy(procs[i]);
-	free(procs);
+	map = strategies[strategy](communication, args);
 	
 	return (map);
 }

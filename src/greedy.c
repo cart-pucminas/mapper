@@ -22,6 +22,7 @@
 #include <mylib/queue.h>
 #include <mylib/util.h>
 #include <mylib/vector.h>
+#include <mylib/matrix.h>
 
 #include "mapper.h"
 
@@ -284,25 +285,36 @@ static int best_neighbor_core
 /**
  * @brief Maps threads using a greedy heuristic.
  *
- * @param threads  Threads.
- * @param nthreads Number of threads.
- * @param args     Additional arguments.
+ * @param communication Communication matrix.
+ * @param args          Additional arguments.
  *
  * @returns A process map.
  */
-int *map_greedy(const vector_t *threads, int nthreads, void *args)
+int *map_greedy(matrix_t communication, void *args)
 {
 	int *map;               /* Thread map.              */
 	int threadid;           /* Best thread.             */
 	int coreid;             /* Best core.               */
 	struct processor *proc; /* Processor's information. */
+	int nthreads;           /* Number of threads.       */
+	vector_t *threads;      /* Threads.                 */
 	
 	/* Sanity check. */
-	assert(threads != NULL);
-	assert(nthreads > 0);
+	assert(communication != NULL);
 	assert(args != NULL);
 	
 	proc = ((struct greedy_args *)args)->proc;
+	
+	nthreads = matrix_height(communication);
+	
+	/* Create processes. */
+	threads = smalloc(nthreads*sizeof(vector_t));
+	for (int i = 0; i < nthreads; i++)
+	{
+		threads[i] = vector_create(nthreads);
+		for (int j = 0; j < nthreads; j++)
+			vector_set(threads[i], j, matrix_get(communication, i, j));
+	}
 	
 	/* Initialize process map. */
 	map = smalloc(nthreads*sizeof(int));
@@ -322,6 +334,11 @@ int *map_greedy(const vector_t *threads, int nthreads, void *args)
 		
 		map[threadid] = coreid;
 	}
+
+	/* House keeping. */
+	for (int i = 0; i < nthreads; i++)
+		vector_destroy(threads[i]);
+	free(threads);
 	
 	return (map);
 }
