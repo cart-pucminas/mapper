@@ -30,19 +30,6 @@
  
 #include "mapper.h"
 
-/**
- * @brief Destroys centroids.
- * 
- * @param centroids Centroids.
- * @param ncentroids Number of centroids.
- */
-static void destroy_centroids(vector_t *centroids, int ncentroids)
-{
-	for (int i = 0; i < ncentroids; i++)
-		vector_destroy(centroids[i]);
-	free(centroids);
-}
-
 #ifdef USE_AUCTION
 
 #define AUCTION_SLACK 0.001
@@ -50,42 +37,31 @@ static void destroy_centroids(vector_t *centroids, int ncentroids)
 /**
  * @brief Balances processes evenly among clusters using auction's algorithm.
  * 
- * @param procs  Processes.
- * @param nprocs Number of processes.
- * @param map    Unbalanced process map.
+ * @param kdata Kmeans data.
  * 
  * @returns A balanced cluster map.
  */
-static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
+static int *balance(struct kmeans_data *kdata)
 {
 	matrix_t m;            /* Auction's matrix.    */
 	int *balanced_map;     /* Process map.         */
-	int ncentroids;        /* Number of centroids. */
-	vector_t *centroids;   /* Centroids.           */
 	int procs_per_cluster; /* Gotcha?              */
 	
-	ncentroids = kmeans_count_centroids(map, nprocs);
-	
-	if (nprocs%nclusters)
+	if (kdata->npoints%kdata->ncentroids)
 		error("invalid number of clusters");
-		
-	if (ncentroids != nclusters)
-		error("bad number of centroids");
-		
-	centroids = kmeans_centroids(procs, nprocs, map);
-
-	procs_per_cluster = nprocs/nclusters;
 	
-	m = matrix_create(nprocs, nprocs);
+	procs_per_cluster = kdata->npoints/kdata->ncentroids;
+	
+	m = matrix_create(kdata->npoints, kdata->npoints);
 	
 	/* Build auction's matrix. */
-	for (int i = 0; i < nprocs; i++)
+	for (int i = 0; i < kdata->npoints; i++)
 	{
-		for (int j = 0; j < nclusters; j++)
+		for (int j = 0; j < kdata->ncentroids; j++)
 		{
 			double distance;
 			
-			distance = vector_distance(procs[i], centroids[j]);
+			distance = vector_distance(kdata->data[i], kdata->centroids[j]);
 			for (int k = 0; k < procs_per_cluster; k++)
 				matrix_set(m, i, procs_per_cluster*j + k, distance);
 		}
@@ -94,12 +70,11 @@ static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
 	balanced_map = auction(m, AUCTION_SLACK);
 	
 	/* Fix map. */
-	for (int i = 0; i < nprocs; i++)
+	for (int i = 0; i < kdata->npoints; i++)
 		balanced_map[i] /= procs_per_cluster;
 	
 	/* House keeping. */
 	matrix_destroy(m);
-	destroy_centroids(centroids, ncentroids);
 	
 	return (balanced_map);
 }
@@ -109,38 +84,27 @@ static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
 /**
  * @brief Balances processes evenly among clusters using a greedy strategy.
  * 
- * @param procs  Processes.
- * @param nprocs Number of processes.
- * @param map    Unbalanced process map.
+ * @param kdata Kmeans data.
  * 
  * @returns A balanced cluster map.
  */
-static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
+static int *balance(struct kmeans_data *kdata)
 {
-	int *balanced_map;     /* Process map.         */
-	vector_t *centroids;   /* Centroids.           */
-	int procs_per_cluster; /* Gotcha?              */
-	int ncentroids;        /* Number of centroids. */
+	int *balanced_map;     /* Process map. */
+	int procs_per_cluster; /* Gotcha?      */
 	
-	ncentroids = kmeans_count_centroids(map, nprocs);
-	
-	if (nprocs%nclusters)
+	if (kdata->npoints%kdata->ncentroids)
 		error("invalid number of clusters");
-		
-	if (ncentroids != nclusters)
-		error("bad number of centroids");
-		
-	centroids = kmeans_centroids(procs, nprocs, map);
 	
-	procs_per_cluster = nprocs/nclusters;
+	procs_per_cluster = kdata->npoints/kdata->ncentroids;
 	
-	balanced_map = smalloc(nprocs*sizeof(int));
-	memcpy(balanced_map, map, nprocs*sizeof(int));
+	balanced_map = smalloc(kdata->npoints*sizeof(int));
+	memcpy(balanced_map, kdata->map, kdata->npoints*sizeof(int));
 	
 	/* Balance. */
-	for (int i = 0; i < nclusters; i++)
+	for (int i = 0; i < kdata->ncentroids; i++)
 	{
-		int n1 = kmeans_count_points(balanced_map, nprocs, i);
+		int n1 = kmeans_count_points(balanced_map, kdata->npoints, i);
 		
 		/* Take a processes out from this cluster. */
 		while (n1-- > procs_per_cluster)
@@ -150,34 +114,32 @@ static int *balance(const vector_t *procs, int nprocs, int *map, int nclusters)
 			
 			/* Get farthest process. */
 			farthest = -1;
-			for (int j = 0; j < nprocs; j++)
+			for (int j = 0; j < kdata->npoints; j++)
 			{
 				if (balanced_map[j] != i)
 					continue;
 				
 				if (farthest < 0)
 				{
-					d1 = vector_distance(procs[farthest = j], centroids[i]);
+					farthest = j;
+					d1 = vector_distance(kdata->data[j], kdata->centroids[i]);
 					continue;
 				}
 				
-				if ((d2 = vector_distance(procs[j], centroids[i])) > d1)
+				if ((d2 = vector_distance(kdata->data[j], kdata->centroids[i])) > d1)
 					farthest = j, d2 = d1;
 			}
 			
 			/* Get not crowded cluster. */
-			for (int j = 0; j < nclusters; j++)
+			for (int j = 0; j < kdata->ncentroids; j++)
 			{
-				if ((kmeans_count_points(balanced_map, nprocs, j)) >= procs_per_cluster)
+				if ((kmeans_count_points(balanced_map, kdata->npoints, j)) >= procs_per_cluster)
 					continue;
 				
 				balanced_map[farthest] = j;
 			}
 		}
 	}
-	
-	/* House keeping. */
-	destroy_centroids(centroids, nclusters);
 	
 	return (balanced_map);
 }
@@ -306,14 +268,14 @@ static int *place
  */
 static int *kmeans_balanced(const vector_t *data, int npoints, int ncentroids)
 {
-	int *clustermap;   /* Cluster map.          */
-	int *balanced_map; /* Balanced cluster map. */
+	int *balanced_map;         /* Balanced cluster map. */
+	struct kmeans_data *kdata; /* Kmeans data.          */
 	
-	clustermap = kmeans(data, npoints, ncentroids, 0.0);
-	balanced_map = balance(data, npoints, clustermap, ncentroids);
+	kdata = kmeans(data, npoints, ncentroids, 0.0);
+	balanced_map = balance(kdata);
 		
 	/* House keeping. */
-	free(clustermap);
+	kmeans_data_destroy(kdata);
 	
 	return (balanced_map);
 }
