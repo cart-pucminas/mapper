@@ -36,7 +36,6 @@ NCLUSTERS=$2  # Number of clusters.
 #  $1 Number of processes.
 #  $2 Processor topology.
 #  $3 Kernel.
-#  $4 Seed value.
 #
 function run_kmeans
 {
@@ -50,7 +49,7 @@ function run_kmeans
 	# Build command.
 	topology="--topology $2"
 	infile="--input input"
-	cmd="$MAPPER --seed $4 $topology $infile --kmeans $NCLUSTERS"
+	cmd="$MAPPER $topology $infile --kmeans $NCLUSTERS"
 	
 	output=$(($cmd 1> $mapfile) 2>&1)
 	
@@ -74,7 +73,6 @@ function run_kmeans
 #  $1 Number of processes.
 #  $2 Processor topology.
 #  $3 Kernel.
-#  $4 Seed value.
 #
 function run_hierarchical
 {
@@ -88,7 +86,7 @@ function run_hierarchical
 	# Build command.
 	topology="--topology $2"
 	infile="--input input"
-	cmd="$MAPPER --seed $4 $topology $infile --hierarchical"
+	cmd="$MAPPER $topology $infile --hierarchical"
 	
 	output=$(($cmd 1> $mapfile) 2>&1)
 	
@@ -144,23 +142,22 @@ function run_greedy
 	rm -f input
 }
 
-seeds=( 28 1013546 1013546 0 0 )
 kernels=( CG EP FT IS MG )
 
 mkdir -p $OUTDIR
 rm -rf $OUTDIR/*
 
 for i in {0..4}; do
-	run_kmeans        32   4x8 ${kernels[$i]} ${seeds[$i]}
-	run_hierarchical  32   4x8 ${kernels[$i]} ${seeds[$i]}
+	run_kmeans        32   4x8 ${kernels[$i]}
+	run_hierarchical  32   4x8 ${kernels[$i]}
 	run_greedy        32   4x8 ${kernels[$i]}
-	run_kmeans        64   8x8 ${kernels[$i]} ${seeds[$i]}
-	run_hierarchical  64   8x8 ${kernels[$i]} ${seeds[$i]}
+	run_kmeans        64   8x8 ${kernels[$i]}
+	run_hierarchical  64   8x8 ${kernels[$i]}
 	run_greedy        64   8x8 ${kernels[$i]}
-	run_kmeans       128  8x16 ${kernels[$i]} ${seeds[$i]}
-	run_hierarchical 128  8x16 ${kernels[$i]} ${seeds[$i]}
+	run_kmeans       128  8x16 ${kernels[$i]}
+	run_hierarchical 128  8x16 ${kernels[$i]}
 	run_greedy       128  8x16 ${kernels[$i]}
-	run_kmeans       256 16x16 ${kernels[$i]} ${seeds[$i]}
-	run_hierarchical 256 16x16 ${kernels[$i]} ${seeds[$i]}
+	run_kmeans       256 16x16 ${kernels[$i]}
+	run_hierarchical 256 16x16 ${kernels[$i]}
 	run_greedy       256 16x16 ${kernels[$i]}
 done
