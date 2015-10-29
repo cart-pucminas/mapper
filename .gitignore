@@ -12,6 +12,10 @@ include/mylib
 *.trace
 input
 output/*
+contrib/*
 
 # Exceptions.
 !bin/.gitignore
+!contrib/mylib*.tar.bz2
+!contrib/scotch*.tar.bz2
+!contrib/tpzsimul*.tar.bz2
