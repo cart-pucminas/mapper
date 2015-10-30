@@ -42,7 +42,7 @@ function run_kmeans
 	tracefile="$INDIR/$3/$1.trace"
 	mapfile="$OUTDIR/kmeans-$1-$3.map"
 	nasfile="$OUTDIR/kmeans-$1-$3.trace"
-	tpzfile="$OUTDIR/greedy-$1-$3.tpz.trace"
+	tpzfile="$OUTDIR/kmeans-$1-$3.tpz.trace"
 	
 	cut -d" " -f2- $tracefile > input
 	
@@ -79,7 +79,7 @@ function run_hierarchical
 	tracefile="$INDIR/$3/$1.trace"
 	mapfile="$OUTDIR/hierarchical-$1-$3.map"
 	nasfile="$OUTDIR/hierarchical-$1-$3.trace"
-	tpzfile="$OUTDIR/greedy-$1-$3.tpz.trace"
+	tpzfile="$OUTDIR/hierarchical-$1-$3.tpz.trace"
 	
 	cut -d" " -f2- $tracefile > input
 	
