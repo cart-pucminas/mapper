@@ -80,6 +80,7 @@ void matrix_generate(FILE *swp, struct matrix *m){
 	struct access *a;
 	a = smalloc(sizeof(struct access));
 	
+	fprintf(stderr, "Gerando a matriz de compartilhamento");
 	//Ler acessos gravados na swap
 	a = access_info.read(swp);
 		
@@ -118,5 +119,6 @@ void matrix_generate(FILE *swp, struct matrix *m){
 		
 	}
 	
+	fprintf(stderr, "Matriz de compartilhamento gerada");
 	
 }

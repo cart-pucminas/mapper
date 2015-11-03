@@ -31,7 +31,7 @@
 #include "trace-parser.h"
 
 /* Cache size (in objects). */
-#define CACHE_SIZE 84769091 //169538182 // baseado em 12 GB de RAM
+#define CACHE_SIZE 84769091 
 
 /* Program arguments. */
 static int ntraces = 0;          /* Number of trace files. */
