@@ -38,7 +38,7 @@
 	if (sizeof(key_t) < sizeof(uint64_t))
 		error("bad types");
 	
-	fprintf(stderr,"\nLendo o trace da %d\n", th);
+	fprintf(stderr,"\nLendo o trace da thread %d\n", th);
 	
 	while (fscanf(trace, "%c%*c%d%*c%" PRIx64 "%*d", &rw, &size, &addr) != EOF)
 	{
