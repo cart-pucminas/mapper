@@ -38,7 +38,7 @@
 	if (sizeof(key_t) < sizeof(uint64_t))
 		error("bad types");
 	
-	fprintf(stderr,"\nReading the trace of the thread %d\n", th);
+	fprintf(stderr,"\nLendo o trace da %d\n", th);
 	
 	while (fscanf(trace, "%c%*c%d%*c%" PRIx64 "%*d", &rw, &size, &addr) != EOF)
 	{
@@ -68,6 +68,7 @@
 			cache_insert(c, accessMem);
 		}
 	}
+	fprintf(stderr,"\nEncerrada a leitura do trace da thread %d\n", th);
 }
 
 
