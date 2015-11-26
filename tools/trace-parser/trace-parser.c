@@ -38,7 +38,7 @@
 	if (sizeof(key_t) < sizeof(uint64_t))
 		error("bad types");
 	
-	fprintf(stderr,"\nReading the trace of the thread %d\n", th);
+	fprintf(stderr,"\nLendo o trace da thread %d\n", th);
 	
 	while (fscanf(trace, "%c%*c%d%*c%" PRIx64 "%*d", &rw, &size, &addr) != EOF)
 	{
@@ -68,6 +68,7 @@
 			cache_insert(c, accessMem);
 		}
 	}
+	fprintf(stderr,"\nEncerrada a leitura do trace da thread %d\n", th);
 }
 
 
@@ -79,6 +80,8 @@ void matrix_generate(FILE *swp, struct matrix *m){
 	
 	struct access *a;
 	a = smalloc(sizeof(struct access));
+	
+	fprintf(stderr, "\nGerando a matriz de compartilhamento\n");
 	
 	//Ler acessos gravados na swap
 	a = access_info.read(swp);
@@ -118,5 +121,6 @@ void matrix_generate(FILE *swp, struct matrix *m){
 		
 	}
 	
+	fprintf(stderr, "\nMatriz de compartilhamento gerada\n");
 	
 }

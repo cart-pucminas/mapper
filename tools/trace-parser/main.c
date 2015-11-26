@@ -31,13 +31,13 @@
 #include "trace-parser.h"
 
 /* Cache size (in objects). */
-#define CACHE_SIZE 40
+#define CACHE_SIZE 169538182 
 
 /* Program arguments. */
 static int ntraces = 0;          /* Number of trace files. */
 static char **tracefiles = NULL; /* Trace files.           */
 static char *outfile = NULL;     /* Output file.           */
-
+static char *swapfile = NULL;     /* Swap file.           */
 /**
  * @brief Prints program usage and exits.
  */
@@ -57,7 +57,8 @@ static void readargs(int argc, char **argv)
 		usage();
 
 	tracefiles = &argv[1];
-	ntraces = argc - 2;
+	ntraces = argc -3; //- 2;
+	swapfile = argv[argc - 2]; 
 	outfile = argv[argc - 1];
 }
 
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
 
 	readargs(argc, argv);
 
-	if ((swp = fopen("swap", "w+")) == NULL)
+	if ((swp = fopen(swapfile, "w+")) == NULL)
 		error("cannot open swap file");
 
 	c = cache_create(&access_info, swp, CACHE_SIZE);
@@ -85,6 +86,9 @@ int main(int argc, char **argv)
 		
 		trace_read(c, trace, i);
 		fclose(trace);
+		
+		fprintf(stderr, "\nFechado arquivo de trace da thread %d\n\n", i);
+		
 	}
 	
 	/* Flushe traces on swap file. */
@@ -93,11 +97,16 @@ int main(int argc, char **argv)
 	/* Create communication matrix. */
 	fseek(swp, 0, SEEK_SET); 
 	m  = matrix_create(QTD_THREADS, QTD_THREADS);
+	
+	fprintf(stderr, "\nMatriz criada\n");
+	
 	matrix_generate(swp, m);
 	
 	
 	if ((matrix_shared = fopen(outfile, "w")) == NULL)
 		error("cannot open output file");
+	
+	fprintf(stderr, "\nGravar matriz no arquivo\n");
 	
 	for (int i = 0; i < ntraces; i++)
 	{
@@ -108,6 +117,8 @@ int main(int argc, char **argv)
 	/* House keeping. */
 	fclose(matrix_shared);
 	fclose(swp);
+	
+	fprintf(stderr, "\n\n FIM!\n");
 		
 	return (EXIT_SUCCESS);
 }
